@@ -1,0 +1,4 @@
+folder controller berisikan code yang digunakan untuk meng-handle 
+setiap rute atau berisikan logika setiap rute
+
+router.method(endpoint, middleware, controller)
