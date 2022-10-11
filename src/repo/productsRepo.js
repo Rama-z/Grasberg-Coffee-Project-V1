@@ -18,29 +18,28 @@ const getProducts = () => {
 
 const sortProducts = (queryParams) => {
   return new Promise((resolve, reject) => {
-    const { search, varian, sort, limit } = queryParams;
-    const sqlSearch = search && search !== "" ? `'%${search}%'` : `'%%'`;
-    const sqlVarian = varian && varian !== "" ? `'%${varian}%'` : `'%%'`;
+    const { search, varian, sort } = queryParams;
+    const querySearch = search && search === "" ? `'%%'` : `'%${search}%'`;
+    const queryVarian = varian && varian === "" ? `'%%'` : `'%${varian}%'`;
     let price = "price is not null";
     if (sort) {
       if (sort.toLowerCase() === "price") {
-        sqlSort = "price";
-        sqlOrder = "asc";
+        querySort = "price";
+        queryOrder = "asc";
       }
       if (sort.toLowerCase() === "price desc") {
-        sqlSort = "price";
-        sqlOrder = "desc";
+        querySort = "price";
+        queryOrder = "desc";
       }
       if (sort.toLowerCase() === "time") {
-        sqlSort = "menu_released";
-        sqlOrder = "asc";
+        querySort = "menu_released";
+        queryOrder = "asc";
       }
     }
     const query = `select * from products 
-    where lower(menu) like lower(${sqlSearch}) and 
-    lower(varian) like lower(${sqlVarian}) and ${price} 
-    order by ${sqlSort} ${sqlOrder} 
-    limit ${limit};`;
+    where lower(menu) like lower(${querySearch}) and 
+    lower(varian) like lower(${queryVarian}) and ${price} 
+    order by ${querySort} ${queryOrder};`;
     postgreDb.query(query, (err, result) => {
       if (err) {
         console.log(err);

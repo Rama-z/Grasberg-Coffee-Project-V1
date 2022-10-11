@@ -20,11 +20,8 @@ const searchTrans = (queryParams) => {
 
 const filterTrans = (queryParams) => {
   return new Promise((resolve, reject) => {
-    const query = `select u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes from transactions t 
-      join users u on t.user_id = u.user_id 
-      join products p on t.product_name = p.menu 
-      join promos p2 on t.coupon_codes = p2.coupon_codes 
-      where lower(p.varian) like lower($1);`;
+    const query =
+      "select u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes from transactions t join users u on t.user_id = u.user_id join products p on t.product_name = p.menu join promos p2 on t.coupon_codes = p2.coupon_codes where lower(p.varian) like lower($1);";
     const values = [`%${queryParams.varian}%`];
     postgreDb.query(query, values, (err, result) => {
       if (err) {
@@ -38,7 +35,7 @@ const filterTrans = (queryParams) => {
 
 const sortTrans = (queryParams) => {
   return new Promise((resolve, reject) => {
-    const { search, varian, sort, limit } = queryParams;
+    const { search, varian, sort } = queryParams;
     const querySearch = search && search !== "" ? `'%${search}%'` : `'%%'`;
     const queryCategories = varian && varian !== "" ? `'%${varian}%'` : `'%%'`;
     let price = "price is not null";
@@ -55,6 +52,10 @@ const sortTrans = (queryParams) => {
         querySort = "t.delivery_at";
         queryOrder = "asc";
       }
+      if (sort.toLowerCase() === "varian") {
+        querySort = "p.varian";
+        queryOrder = "asc";
+      }
     }
     const query = `select u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes from transactions t 
     join users u on t.user_id = u.user_id 
@@ -63,8 +64,7 @@ const sortTrans = (queryParams) => {
     where lower(p.menu) like lower(${querySearch}) and 
     lower(p.varian) like lower(${queryCategories}) and ${price} 
     group by u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes, t.product_name
-    order by ${querySort} ${queryOrder} 
-    limit ${limit};`;
+    order by ${querySort} ${queryOrder}`;
     postgreDb.query(query, (err, result) => {
       if (err) {
         console.log(err);
@@ -78,16 +78,9 @@ const sortTrans = (queryParams) => {
 const createTrans = (body) => {
   return new Promise((resolve, reject) => {
     const query =
-      "insert into transactions (username, product_name, price, delivery_adress, coupon_codes) values ($1, $2, $3, $4, $5)";
-    const { username, product_name, price, delivery_adress, coupon_codes } =
-      body;
-    const value = [
-      username,
-      product_name,
-      price,
-      delivery_adress,
-      coupon_codes,
-    ];
+      "insert into transactions (username, product_name, delivery_adress, coupon_codes) values ($1, $2, $3, $4)";
+    const { username, product_name, delivery_adress, coupon_codes } = body;
+    const value = [username, product_name, delivery_adress, coupon_codes];
     postgreDb.query(query, value, (err, result) => {
       if (err) {
         return reject(err);
