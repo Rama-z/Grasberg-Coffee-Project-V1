@@ -2,6 +2,7 @@ require("dotenv").config();
 
 // Impor Express
 const express = require("express");
+const multer = require("multer");
 
 // import db
 const postgreDb = require("./src/config/postgre");
@@ -31,7 +32,8 @@ postgreDb
     // bentuknya body => parsing => query => masuk mainRouter
     // Semua request ke server akan didelegasikan ke main router
     server.use(mainRouter);
-
+    // multer
+    server.use(express.static("./public"));
     // Server siap menerima request pada port:
     server.listen(PORT, () => {
       console.log(`Server ini berjalan pada port ${PORT}`);
