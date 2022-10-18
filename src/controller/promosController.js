@@ -5,7 +5,7 @@ const repoPromos = require("../repo/promosRepo");
 const search = async (req, res) => {
   try {
     console.log(req.query);
-    const response = await repoPromos.searchPromos(req.query);
+    const response = await repoPromos.search(req.query);
     res.status(200).json({
       result: response.rows,
     });
@@ -18,8 +18,9 @@ const search = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const response = await repoPromos.createPromos(req.body);
+    const response = await repoPromos.create(req.body);
     res.status(200).json({
+      msg: "Data Berhasil dibuat, silakan check di List Promo dan update ID",
       result: response.rows,
     });
   } catch (err) {
@@ -32,9 +33,9 @@ const create = async (req, res) => {
 
 const edit = async (req, res) => {
   try {
-    const response = await repoPromos.editPromos(req.body, req.params);
+    const response = await repoPromos.edit(req.body, req.params);
     res.status(200).json({
-      result: response,
+      result: response.rows,
     });
   } catch (error) {
     console.log(error);
