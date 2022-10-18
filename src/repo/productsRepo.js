@@ -1,76 +1,165 @@
 // import database
 const postgreDb = require("../config/postgre");
 
-const getProducts = () => {
+const searchAndFilter = (queryParams) => {
   return new Promise((resolve, reject) => {
-    // Asumsi query params selalu berisi menu and varian
-    const query = "select * from products"; // where lower(menu) like lower(%1) and lower(varian) like lower($2)";
-    // const values = [`%${queryParams.menu}%`, `%${queryParams.varian}`];
-    postgreDb.query(query, (err, result) => {
-      if (err) {
-        console.log(err);
-        return reject(err);
-      }
-      return resolve(result);
-    });
-  });
-};
-
-const sortProducts = (queryParams) => {
-  return new Promise((resolve, reject) => {
-    const { search, varian, sort } = queryParams;
-    const querySearch = search && search === "" ? `'%%'` : `'%${search}%'`;
-    const queryVarian = varian && varian === "" ? `'%%'` : `'%${varian}%'`;
-    let price = "price is not null";
-    if (sort) {
-      if (sort.toLowerCase() === "price") {
-        querySort = "price";
-        queryOrder = "asc";
-      }
-      if (sort.toLowerCase() === "price desc") {
-        querySort = "price";
-        queryOrder = "desc";
-      }
-      if (sort.toLowerCase() === "time") {
-        querySort = "menu_released";
-        queryOrder = "asc";
+    const { search, filter, order_by, order_in } = queryParams;
+    let join = "";
+    let transactions = "";
+    let group = "";
+    let dec = "order by";
+    let orderBy = order_by;
+    let orderIn = order_in;
+    let varian = "";
+    if (
+      (filter && filter === "1") ||
+      (filter && filter === "2") ||
+      (filter && filter === "3") ||
+      (filter && filter === "4")
+    ) {
+      varian = `and varian_id = ${filter}`;
+    }
+    if (
+      order_by !== "created_at" &&
+      order_by !== "price" &&
+      order_by !== "transactions"
+    ) {
+      dec = "";
+      orderBy = "";
+      if (
+        (order_in && order_in === "asc") ||
+        (order_in && order_in === "desc")
+      ) {
+        orderIn = "";
       }
     }
-    const query = `select * from products 
-    where lower(menu) like lower(${querySearch}) and 
-    lower(varian) like lower(${queryVarian}) and ${price} 
-    order by ${querySort} ${queryOrder};`;
-    postgreDb.query(query, (err, result) => {
+    if (order_by === "transactions") {
+      join = "join transactions t on p.id = t.product_id ";
+      transactions = "count(t.product_id), ";
+      group = "group by p.id, c.category_name";
+      dec = "";
+      orderBy = "";
+      if (
+        (order_in && order_in === "asc") ||
+        (order_in && order_in === "desc")
+      ) {
+        orderIn = "";
+      }
+    }
+    const query = `select ${transactions}p.id, p.menu, p.price, c.category_name, p.created_at, p.updated_at from products p join categorize c on p.varian_id = c.id ${join} where lower(menu) like lower('%${search}%') ${varian} ${group} ${dec} ${orderBy} ${orderIn}`;
+    const value = [];
+    postgreDb.query(query, value, (err, result) => {
       if (err) {
+        console.log(query);
         console.log(err);
         return reject(err);
       }
+      console.log(query);
       return resolve(result);
     });
   });
 };
 
-const getDynamic = (queryParams) => {
+const paginasi2 = (queryParams) => {
   return new Promise((resolve, reject) => {
-    const query =
-      "select * from products where lower(menu) like lower($1) and lower(varian) like lower($2) order by price";
-    const values = [`%${queryParams.menu}%`, `%${queryParams.varian}%`];
-    postgreDb.query(query, values, (err, result) => {
+    const { search, filter } = queryParams;
+    let varian = "";
+    if (
+      (filter && filter === "1") ||
+      (filter && filter === "2") ||
+      (filter && filter === "3") ||
+      (filter && filter === "4")
+    ) {
+      varian = `and varian_id = ${filter}`;
+    }
+    const query = `select count(*) from products p join categorize c on p.varian_id = c.id where lower(menu) like lower('%${search}%') ${varian}`;
+    const value = [];
+    postgreDb.query(query, value, (err, result) => {
       if (err) {
+        console.log(query);
         console.log(err);
         return reject(err);
       }
+      console.log(query);
       return resolve(result);
     });
   });
 };
 
-const createProduct = (body) => {
+const paginasi = (queryParams) => {
+  return new Promise((resolve, reject) => {
+    const { search, filter, order_by, order_in, page, limit } = queryParams;
+    let join = "";
+    let transactions = "";
+    let group = "";
+    let dec = "order by";
+    let orderBy = order_by;
+    let orderIn = order_in;
+    let varian = "";
+    let limits = "";
+    // ganti
+    let batas = "";
+    let offset = "";
+    let offsets = "";
+    if (
+      (filter && filter === "1") ||
+      (filter && filter === "2") ||
+      (filter && filter === "3") ||
+      (filter && filter === "4")
+    ) {
+      varian = `and varian_id = ${filter}`;
+    }
+    if (order_by !== "created_at" && order_by !== "price") {
+      dec = "";
+      orderBy = "";
+      if (
+        (order_in && order_in === "asc") ||
+        (order_in && order_in === "desc")
+      ) {
+        orderIn = "";
+      }
+    }
+    if (order_by === "transactions") {
+      join = "join transactions t on t.product_id = p.id ";
+      transactions = "count(p.id), ";
+      group = "group by p.id, c.category_name";
+      dec = "";
+      orderBy = "";
+      if (
+        (order_in && order_in === "asc") ||
+        (order_in && order_in === "desc")
+      ) {
+        orderIn = "";
+      }
+    }
+    if (page && page > 0) {
+      batas = "limit";
+      offset = (page - 1) * limit;
+      if (limit && limit > 0) {
+        limits = limit;
+        offsets = "offset";
+      }
+    }
+    const query = `select ${transactions}p.id, p.menu, p.price, c.category_name, p.created_at, p.updated_at from products p join categorize c on p.varian_id = c.id ${join} where lower(menu) like lower('%${search}%') ${varian} ${group} ${dec} ${orderBy} ${orderIn} ${batas} ${limits} ${offsets} ${offset}`;
+    const value = [];
+    postgreDb.query(query, value, (err, result) => {
+      if (err) {
+        console.log(query);
+        console.log(err);
+        return reject(err);
+      }
+      console.log(query);
+      return resolve(result);
+    });
+  });
+};
+
+const create = (body) => {
   return new Promise((resolve, reject) => {
     const query =
-      "insert into products (menu, price, varian) values ($1, $2, $3)";
-    const { menu, price, varian } = body;
-    const value = [menu, price, varian];
+      "insert into products (menu, price, varian_id) values ($1, $2, $3)";
+    const { menu, price, varian_id } = body;
+    const value = [menu, price, varian_id];
     postgreDb.query(query, value, (err, result) => {
       if (err) {
         return reject(err);
@@ -80,7 +169,7 @@ const createProduct = (body) => {
   });
 };
 
-const editProduct = (body, params) => {
+const edit = (body, params) => {
   return new Promise((resolve, reject) => {
     let query = "update products set ";
     const value = [];
@@ -99,18 +188,55 @@ const editProduct = (body, params) => {
         resolve(response);
       })
       .catch((err) => {
-        console.log(err);
+        reject(err);
+      });
+  });
+};
+
+const edit2 = (body, params, file) => {
+  return new Promise((resolve, reject) => {
+    let query = "update products set ";
+    const value = [];
+    if (file) {
+      if (Object.keys(body).length === 0) {
+        const imageUrl = `/image/${file.filename}`;
+        query += `image = '${imageUrl}' where id = $1 returning menu, price, varian_id, image`;
+        value.push(params.id);
+      }
+      if (Object.keys(body).length > 0) {
+        const imageUrl = `/image/${file.filename}`;
+        query += `image = '${imageUrl}', `;
+      }
+    }
+    Object.keys(body).forEach((keys, idx, array) => {
+      if (idx === array.length - 1) {
+        query += `${keys} = $${idx + 1} where id = $${
+          idx + 2
+        } returning menu, price, varian_id, image`;
+        value.push(body[keys], params.id);
+        return;
+      }
+      query += `${keys} = $${idx + 1}, `;
+      value.push(body[keys]);
+    });
+    postgreDb
+      .query(query, value)
+      .then((response) => {
+        resolve(response);
+      })
+      .catch((err) => {
         reject(err);
       });
   });
 };
 
 const repoProducts = {
-  getProducts,
-  sortProducts,
-  getDynamic,
-  createProduct,
-  editProduct,
+  searchAndFilter,
+  paginasi,
+  create,
+  edit,
+  paginasi2,
+  edit2,
 };
 
 module.exports = repoProducts;

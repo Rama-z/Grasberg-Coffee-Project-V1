@@ -1,26 +1,29 @@
 const postgreDb = require("../config/postgre");
 
-const searchPromos = (queryParams) => {
+const search = (queryParams) => {
   return new Promise((resolve, reject) => {
+    const { codes, menu } = queryParams;
     const query =
-      "select * from promos where lower(coupon_codes) like lower($1) and lower(menu) like lower($2) order by valid_date";
-    const values = [`%${queryParams.coupon_code}%`, `%${queryParams.menu}%`];
-    postgreDb.query(query, values, (err, result) => {
+      "select p.codes, p.discount, p.valid_date, p2.menu, p2.price from promos p join products p2 on p.menu_id = p2.id where lower(p.codes) like lower($1) and lower(p2.menu) like lower($2)";
+    const value = [`%${codes}%`, `%${menu}%`];
+    postgreDb.query(query, value, (err, result) => {
       if (err) {
+        console.log(query);
         console.log(err);
         return reject(err);
       }
+      console.log(query);
       return resolve(result);
     });
   });
 };
 
-const createPromos = (body) => {
+const create = (body) => {
   return new Promise((resolve, reject) => {
     const query =
-      "insert into promos (coupon_codes, menu, discount, valid_date) values ($1, $2, $3, $4)";
-    const { coupon_codes, menu, discount, valid_date } = body;
-    const value = [coupon_codes, menu, discount, valid_date];
+      "insert into promos (codes, discount, valid_date, menu_id) values ($1, $2, $3, $4)";
+    const { codes, discount, valid_date, menu_id } = body;
+    const value = [codes, discount, valid_date, menu_id];
     postgreDb.query(query, value, (err, result) => {
       if (err) {
         return reject(err);
@@ -30,9 +33,9 @@ const createPromos = (body) => {
   });
 };
 
-const editPromos = (body, params) => {
+const edit = (body, params) => {
   return new Promise((resolve, reject) => {
-    let query = "update promos set ";
+    let query = "update promos set updated_at = CURRENT_TIMESTAMP, ";
     const value = [];
     Object.keys(body).forEach((key, idx, array) => {
       if (idx === array.length - 1) {
@@ -46,9 +49,11 @@ const editPromos = (body, params) => {
     postgreDb
       .query(query, value)
       .then((response) => {
+        console.log(query);
         resolve(response);
       })
       .catch((err) => {
+        console.log(query);
         console.log(err);
         reject(err);
       });
@@ -56,9 +61,9 @@ const editPromos = (body, params) => {
 };
 
 const repoTrans = {
-  searchPromos,
-  createPromos,
-  editPromos,
+  search,
+  create,
+  edit,
 };
 
 module.exports = repoTrans;
