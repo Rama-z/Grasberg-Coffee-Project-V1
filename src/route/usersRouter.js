@@ -7,6 +7,8 @@ const {
   createUser,
   editUser,
   deleteUser,
+  register,
+  editPassword,
 } = require("../controller/userController");
 
 // buat router
@@ -19,5 +21,15 @@ usersRouter.post("/createUser/", createUser);
 usersRouter.patch("/:id", editUser);
 
 usersRouter.delete("/:id", deleteUser);
+
+// register
+usersRouter.post("/register/", register);
+
+// edit pw
+usersRouter.patch("/", editPassword);
+
+// edit profil
+usersRouter.patch("/profile/", (req, res) => {});
+
 // Export routernya
 module.exports = usersRouter;
