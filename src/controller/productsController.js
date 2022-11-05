@@ -1,13 +1,13 @@
 // inmport repository
 const repoProducts = require("../repo/productsRepo");
+const sendResponse = require("../helper/response.js");
 
-const searchAndFilter = async (req, res) => {
+const getProductsbyId = async (req, res) => {
   try {
-    const response = await repoProducts.searchAndFilter(req.query);
-    res.status(200).json({
-      result: response.rows,
-    });
-  } catch (err) {
+    const response = await repoProducts.getProductById(req.params.id);
+    res.status(200).json({ result: response.rows[0] });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({
       msg: "internal server error",
     });
@@ -19,7 +19,13 @@ const paginasi = async (req, res) => {
     const responsea = await repoProducts.paginasi2(req.query);
     const response = await repoProducts.paginasi(req.query);
     let totalPage = Number(responsea.rows[0].count);
-    let totalPages = Math.ceil(totalPage / req.query.limit);
+    let totalPages = "";
+    console.log(req.query.limit);
+    if (!req.query.limit) {
+      totalPages = 1;
+    } else {
+      totalPages = Math.ceil(totalPage / req.query.limit);
+    }
     let host = `http://${req.get("HOST")}${req.baseUrl}${req.route.path}`;
     let link = "";
     Object.keys(req.query).forEach((keys, idx) => {
@@ -57,53 +63,29 @@ const paginasi = async (req, res) => {
 
 const createWithImage = async (req, res) => {
   try {
-    const response = await repoProducts.create(req.body);
+    const response = await repoProducts.create(req.body, req.params, req.file);
     res.status(200).json({
+      qqq: req.file,
       msg: "Input Sukses Sila Check di List Products, dan Update Id Products",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
       filename: req.file.filename,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
       msg: "Masukkan Data Dengan Tepat",
     });
   }
 };
 
-const create = async (req, res) => {
+const editProduct = async (req, res) => {
   try {
-    const response = await repoProducts.create(req.body);
+    const response = await repoProducts.editProduct(
+      req.body,
+      req.params,
+      req.file
+    );
     res.status(200).json({
-      msg: "Input Sukses Sila Check di List Products, dan Update Id Products",
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "Masukkan Data Dengan Tepat",
-    });
-  }
-};
-
-const edit = async (req, res) => {
-  try {
-    const response = await repoProducts.edit(req.body, req.params);
-    res.status(200).json({
-      kkk: Number(req.params.id),
-      msg: "Data berhasil diedit, sila check list Products",
-      result: response.rows,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      msg: "Internal Server Errorr",
-    });
-  }
-};
-
-const edit2 = async (req, res) => {
-  try {
-    const response = await repoProducts.edit2(req.body, req.params, req.file);
-    res.status(200).json({
+      asd: req.file,
       msg: "Data berhasil diedit, sila check list Products",
       Menu: response.rows[0].menu,
       Price: response.rows[0].price,
@@ -117,11 +99,25 @@ const edit2 = async (req, res) => {
   }
 };
 
+const drop = async (req, res) => {
+  try {
+    await repoProducts.drop(req.params.id);
+    sendResponse.success(res, 200, {
+      msg: "Delete Profile Success",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      asd: err,
+      msg: "Internal Server Errorr",
+    });
+  }
+};
+
 module.exports = {
-  searchAndFilter,
+  getProductsbyId,
   paginasi,
-  create,
   createWithImage,
-  edit,
-  edit2,
+  editProduct,
+  drop,
 };

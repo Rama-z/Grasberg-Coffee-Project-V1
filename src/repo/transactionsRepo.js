@@ -1,38 +1,5 @@
 const postgreDb = require("../config/postgre");
 
-const searchTrans = (queryParams) => {
-  return new Promise((resolve, reject) => {
-    const query =
-      "select * from transactions where lower(username) like lower($1) and lower(product_name) like lower($2) order by username";
-    const values = [
-      `%${queryParams.username}%`,
-      `%${queryParams.product_name}%`,
-    ];
-    postgreDb.query(query, values, (err, result) => {
-      if (err) {
-        console.log(err);
-        return reject(err);
-      }
-      return resolve(result);
-    });
-  });
-};
-
-const filterTrans = (queryParams) => {
-  return new Promise((resolve, reject) => {
-    const query =
-      "select u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes from transactions t join users u on t.user_id = u.user_id join products p on t.product_name = p.menu join promos p2 on t.coupon_codes = p2.coupon_codes where lower(p.varian) like lower($1);";
-    const values = [`%${queryParams.varian}%`];
-    postgreDb.query(query, values, (err, result) => {
-      if (err) {
-        console.log(err);
-        return reject(err);
-      }
-      return resolve(result);
-    });
-  });
-};
-
 const sortTrans = (queryParams) => {
   return new Promise((resolve, reject) => {
     const { search, filter, order_by, order_in } = queryParams;
@@ -97,28 +64,19 @@ const sortTrans = (queryParams) => {
   });
 };
 
-// const query = `select u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes from transactions t
-//     join users u on t.user_id = u.user_id
-//     join products p on t.product_name = p.menu
-//     join promos p2 on t.coupon_codes = p2.coupon_codes
-//     where lower(p.menu) like lower(${querySearch}) and
-//     lower(p.varian) like lower(${queryCategories}) and ${price}
-//     group by u.user_id, t.username, p.menu, p.price, p.varian, p.menu_released, t.delivery_at, t.coupon_codes, t.product_name
-//     order by ${querySort} ${queryOrder}`;
-// postgreDb.query(query, (err, result) => {
-//   if (err) {
-//     console.log(err);
-//     return reject(err);
-//   }
-//   return resolve(result);
-// });
-
-const createTrans = (body) => {
+const createTrans = (body, token) => {
   return new Promise((resolve, reject) => {
     const query =
-      "insert into transactions (username, product_name, delivery_adress, coupon_codes) values ($1, $2, $3, $4)";
-    const { username, product_name, delivery_adress, coupon_codes } = body;
-    const value = [username, product_name, delivery_adress, coupon_codes];
+      "insert into transactions (product_id, delivery_adress, promo_id, price, user_id, payment_id) values ($1, $2, $3, $4, $5, $6)";
+    const { product_id, delivery_adress, promo_id, price, payment_id } = body;
+    const value = [
+      product_id,
+      delivery_adress,
+      promo_id,
+      price,
+      token,
+      payment_id,
+    ];
     postgreDb.query(query, value, (err, result) => {
       if (err) {
         return reject(err);
@@ -290,7 +248,7 @@ const users2 = (queryParams) => {
   });
 };
 
-const users = (queryParams) => {
+const users = (queryParams, token) => {
   return new Promise((resolve, reject) => {
     const { search, filter, order_by, order_in, page, limit, user_id } =
       queryParams;
@@ -349,11 +307,11 @@ const users = (queryParams) => {
     join categorize c on p.varian_id = c.id 
     join users u on t.user_id = u.id
     ${join} where u.id = $1 and lower(menu) like lower('%${search}%') ${varian} ${group}${dec} ${orderBy} ${orderIn} ${batas} ${limits} ${offsets} ${offset}`;
-    const value = [Number(user_id)];
+    const value = [Number(token)];
     postgreDb.query(query, value, (err, result) => {
       if (err) {
         console.log(user_id);
-        // console.log(query);
+        console.log(query);
         console.log(err);
         return reject(err);
       }
@@ -364,8 +322,6 @@ const users = (queryParams) => {
 };
 
 const repoTrans = {
-  searchTrans,
-  filterTrans,
   sortTrans,
   createTrans,
   editTrans,

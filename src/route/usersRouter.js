@@ -1,5 +1,7 @@
 // Import Router
 const express = require("express");
+const isLogin = require("../middleware/isLogin");
+const allowedRole = require("../middleware/allowedRole");
 
 // import controller
 const {
@@ -10,6 +12,7 @@ const {
   register,
   editPassword,
 } = require("../controller/userController");
+const { profile } = require("../repo/userRepo");
 
 // buat router
 const usersRouter = express.Router();
@@ -26,10 +29,15 @@ usersRouter.delete("/:id", deleteUser);
 usersRouter.post("/register/", register);
 
 // edit pw
-usersRouter.patch("/", editPassword);
+usersRouter.patch("/", isLogin(), allowedRole("user"), editPassword);
 
 // edit profil
-usersRouter.patch("/profile/", (req, res) => {});
+usersRouter.patch(
+  "/profile/",
+  isLogin(),
+  allowedRole("user", "admin"),
+  profile
+);
 
 // Export routernya
 module.exports = usersRouter;

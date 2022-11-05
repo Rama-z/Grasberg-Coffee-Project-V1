@@ -2,35 +2,6 @@
 
 const repoTransaction = require("../repo/transactionsRepo");
 
-const search = async (req, res) => {
-  try {
-    console.log(req.query);
-    const response = await repoTransaction.searchTrans(req.query);
-    res.status(200).json({
-      result: response.rows,
-    });
-  } catch (err) {
-    res.status(500).json({
-      msg: "Internal Server Error",
-    });
-  }
-};
-
-const filter = async (req, res) => {
-  try {
-    console.log(req.query);
-    const response = await repoTransaction.filterTrans(req.query);
-    res.status(200).json({
-      result: response.rows,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "Internal Server Error",
-    });
-  }
-};
-
 const sort = async (req, res) => {
   try {
     const responsea = await repoTransaction.paginasi2(req.query);
@@ -75,7 +46,10 @@ const sort = async (req, res) => {
 const users = async (req, res) => {
   try {
     const responsea = await repoTransaction.users2(req.query);
-    const response = await repoTransaction.users(req.query);
+    const response = await repoTransaction.users(
+      req.query,
+      req.userPayload.user_id
+    );
     let totalPage = Number(responsea.rows[0].count);
     let totalPages = Math.ceil(totalPage / req.query.limit);
     let host = `http://${req.get("HOST")}${req.baseUrl}${req.route.path}`;
@@ -115,23 +89,30 @@ const users = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const response = await repoTransaction.createTrans(req.body);
+    const response = await repoTransaction.createTrans(
+      req.body,
+      req.userPayload.user_id
+    );
     res.status(200).json({
-      result: response.rows,
+      msg: "Input Sukses Sila Check di List Products, dan Update Id Products",
     });
   } catch (err) {
     console.log(err);
     res.status(500).json({
-      msg: "internal Error",
+      msg: "Masukkan Data Dengan Tepat",
     });
   }
 };
 
 const edit = async (req, res) => {
   try {
-    const response = await repoTransaction.editTrans(req.body, req.params);
+    const response = await repoTransaction.editTrans(
+      req.body,
+      req.params,
+      req.file
+    );
     res.status(200).json({
-      result: response.rows,
+      msg: "Data berhasil diedit, sila check list Products",
     });
   } catch (error) {
     console.log(error);
@@ -141,11 +122,25 @@ const edit = async (req, res) => {
   }
 };
 
+const drop = async (req, res) => {
+  try {
+    await repoTransaction.drop(req.params.id);
+    sendResponse.success(res, 200, {
+      msg: "Delete Profile Success",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      asd: err,
+      msg: "Internal Server Errorr",
+    });
+  }
+};
+
 module.exports = {
-  search,
-  filter,
   sort,
   create,
   edit,
   users,
+  drop,
 };

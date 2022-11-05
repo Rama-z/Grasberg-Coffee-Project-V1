@@ -1,7 +1,10 @@
 const authRouter = require("express").Router();
 const authController = require("../controller/auth");
+const isLogin = require("../middleware/isLogin");
 // login
 authRouter.post("/", authController.login);
+
+authRouter.delete("/logout", isLogin(), authController.logout);
 
 // authRouter.post("/logout/", verifyToken, (req, res) => {
 //   const { userId, token } = request;
@@ -10,4 +13,5 @@ authRouter.post("/", authController.login);
 //       response.send({ error });
 //     }
 // });
+
 module.exports = authRouter;

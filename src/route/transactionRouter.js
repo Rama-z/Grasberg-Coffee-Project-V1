@@ -2,25 +2,34 @@
 const express = require("express");
 const isLogin = require("../middleware/isLogin");
 const imageUpload = require("../middleware/upload");
+const allowedRole = require("../middleware/allowedRole");
 // import controller
 const {
-  search,
-  filter,
   sort,
   create,
   edit,
   users,
+  drop,
 } = require("../controller/transactionsController");
 
 // buat router
 const transactionsRouter = express.Router();
 
-transactionsRouter.get("/", search);
-transactionsRouter.get("/filter/", filter);
-transactionsRouter.get("/sort/", sort);
-transactionsRouter.get("/users/", isLogin(), users);
-transactionsRouter.post("/createTransaction/", create);
+transactionsRouter.get("/sort/", isLogin(), allowedRole("admin"), sort);
+transactionsRouter.get(
+  "/users/",
+  isLogin(),
+  allowedRole("user", "admin"),
+  users
+);
+transactionsRouter.post(
+  "/createTransaction/",
+  isLogin(),
+  allowedRole("user", "admin"),
+  create
+);
 transactionsRouter.patch("/:id", edit);
+transactionsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
 
 // Export routernya
 module.exports = transactionsRouter;

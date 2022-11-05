@@ -1,4 +1,5 @@
 const userRepo = require("../repo/userRepo");
+const sendResponse = require("../helper/response");
 
 const getUser = async (req, res) => {
   try {
@@ -49,13 +50,13 @@ const deleteUser = async (req, res) => {
 };
 
 const register = (req, res) => {
-  const { body } = req;
   userRepo
-    .register(body)
+    .register(req.body)
     .then((response) => {
-      res.status(200).json({
+      console.log("harusnya berhasil controller");
+      console.log(response.rows[0]);
+      return res.status(200).json({
         msg: "Register Success",
-        // result: response,
         data: {
           ...response.rows[0],
           email: body.email,
@@ -64,16 +65,17 @@ const register = (req, res) => {
       });
     })
     .catch((err) => {
+      console.log("controllerError");
+      console.log(err);
       res.status(500).json({
-        msg: "Email Has Been Used",
+        msg: "Email Has Been Useed",
       });
     });
 };
 
 const editPassword = (req, res) => {
-  const { body } = req;
   userRepo
-    .editPassword(body)
+    .editPassword(req.body, req.userPayload.user_id)
     .then((response) => {
       res.status(200).json({
         msg: "Password has been changed",
@@ -86,6 +88,27 @@ const editPassword = (req, res) => {
     });
 };
 
+const profile = async (req, res) => {
+  try {
+    if (req.file) {
+      req.body.image = req.file.path;
+    }
+    const response = await userRepo.profile(
+      req.body,
+      req.userPayload.user_id,
+      req.file
+    );
+    // response.rows[0].image = `images/${req.file.filename}`;
+    sendResponse.success(res, 200, {
+      msg: "Edit Profile Success",
+      data: response.rows,
+    });
+  } catch (err) {
+    console.log("asda");
+    sendResponse.error(res, 500, "Internal Server Error");
+  }
+};
+
 const userController = {
   getUser,
   createUser,
@@ -93,6 +116,7 @@ const userController = {
   deleteUser,
   register,
   editPassword,
+  profile,
 };
 
 module.exports = userController;

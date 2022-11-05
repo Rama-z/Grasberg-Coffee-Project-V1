@@ -1,14 +1,33 @@
 // Import Router
 const express = require("express");
-
-const { search, create, edit } = require("../controller/promosController");
+const isLogin = require("../middleware/isLogin");
+const allowedRole = require("../middleware/allowedRole");
+const imageUpload = require("../middleware/upload");
+const {
+  search,
+  create,
+  edit,
+  drop,
+} = require("../controller/promosController");
 
 // buat router
 const promosRouter = express.Router();
 
 promosRouter.get("/", search);
-promosRouter.post("/createPromos/", create);
-promosRouter.patch("/:id", edit);
-
+promosRouter.post(
+  "/createPromos/",
+  isLogin(),
+  allowedRole("admin"),
+  imageUpload.single("image"),
+  create
+);
+promosRouter.patch(
+  "/:id",
+  isLogin(),
+  allowedRole("admin"),
+  imageUpload.single("image"),
+  edit
+);
+promosRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
 // Export routernya
 module.exports = promosRouter;

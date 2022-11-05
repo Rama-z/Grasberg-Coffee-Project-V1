@@ -7,7 +7,7 @@ module.exports = {
       const { email, pass } = body;
       // 1. apakah ada email yang bersangkutan di DB
       const getPasswordByEmailQuery =
-        "SELECT id, username, pass FROM users WHERE email = $1";
+        "SELECT id, username, pass, roles FROM users WHERE email = $1";
       const getPasswordByEmailValues = [email];
       db.query(
         getPasswordByEmailQuery,
@@ -36,15 +36,17 @@ module.exports = {
               });
             // 3. proses login => create jwt => return jwt to user
             const payload = {
+              //1
               user_id: response.rows[0].id,
-              name: response.rows[0].name,
+              name: response.rows[0].username,
               email,
+              role: response.rows[0].roles,
             };
             jwt.sign(
               payload,
               process.env.SECRET_KEY,
               {
-                expiresIn: "5m",
+                expiresIn: "100m",
                 issuer: process.env.ISSUER_KEY,
               },
               (err, token) => {
@@ -56,12 +58,26 @@ module.exports = {
                   token,
                   name: payload.name,
                   email: payload.email,
+                  role: payload.role,
                 });
               }
             );
           });
         }
       );
+    });
+  },
+
+  logout: (token) => {
+    return new Promise((resolve, reject) => {
+      const query = "insert into blacklist(token) values($1)";
+      db.query(query, [token], (error, result) => {
+        if (error) {
+          console.log(error);
+          return reject(error);
+        }
+        return resolve({ message: "Logout Success." });
+      });
     });
   },
 };

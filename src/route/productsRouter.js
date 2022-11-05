@@ -1,6 +1,7 @@
 // Import Router
 const express = require("express");
 const isLogin = require("../middleware/isLogin");
+const allowedRole = require("../middleware/allowedRole");
 const imageUpload = require("../middleware/upload");
 const app = express();
 // const skipImage = require("../middleware/skipImage");
@@ -14,12 +15,11 @@ const app = express();
 
 //Import Controller
 const {
-  searchAndFilter,
+  getProductsbyId,
   paginasi,
-  create,
   createWithImage,
-  edit,
-  edit2,
+  editProduct,
+  drop,
 } = require("../controller/productsController");
 // buat router
 const productsRouter = express.Router();
@@ -27,14 +27,28 @@ const productsRouter = express.Router();
 // Menjalankan query
 // http://localhost:8080/api/v1/products
 // Tidak perlu menuliskan kembali di get karena ini subrouter
-productsRouter.get("/searchAndFilter", searchAndFilter);
-productsRouter.get("/paginasi", paginasi);
+productsRouter.get("/:id", getProductsbyId);
+productsRouter.get("/", paginasi);
 
 // http://localhost:8080/api/v1/products
-productsRouter.post("/createProducts/", isLogin(), create);
-productsRouter.post("/", imageUpload.single("image"), createWithImage);
+
+productsRouter.post(
+  "/",
+  isLogin(),
+  allowedRole("admin"),
+  imageUpload.single("image"),
+  createWithImage
+);
 // agar dinamis menggunakan :id
-productsRouter.patch("/:id", isLogin(), edit);
-productsRouter.patch("/image/:id", imageUpload.single("image"), edit2);
+
+productsRouter.patch(
+  "/image/:id",
+  isLogin(),
+  imageUpload.single("image"),
+  editProduct
+);
+
+productsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
+
 // Export routernya
 module.exports = productsRouter;

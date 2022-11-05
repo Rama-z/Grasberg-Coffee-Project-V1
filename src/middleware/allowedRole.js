@@ -1,3 +1,5 @@
+const sendResponse = require("../helper/response");
+
 module.exports = (...allowedRole) => {
   return (req, res, next) => {
     const payload = req.userPayload;
@@ -7,8 +9,12 @@ module.exports = (...allowedRole) => {
       isAllowed = true;
       break;
     }
-    if (!isAllowed)
-      return res.status(403).json({ msg: "Forbidden", data: null });
+    if (!isAllowed) {
+      return sendResponse.error(res, 403, {
+        msg: "Forbidden",
+        error: "You don't have the right to do that",
+      });
+    }
     next();
   };
 };
