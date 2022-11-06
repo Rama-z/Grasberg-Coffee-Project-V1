@@ -25,7 +25,7 @@ mainRouter.use(`${prefix}/auth`, authRouter);
 
 // Pemasangan route
 // http://localhost:8080/
-mainRouter.get("/welcome", (req, res) => {
+mainRouter.get("/", (req, res) => {
   res.json({
     msg: "welcome in Grasberg Coffee",
   });
