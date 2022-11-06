@@ -8,7 +8,7 @@ const {
   sort,
   create,
   edit,
-  users,
+  history,
   drop,
 } = require("../controller/transactionsController");
 
@@ -17,15 +17,16 @@ const transactionsRouter = express.Router();
 
 transactionsRouter.get("/sort/", isLogin(), allowedRole("admin"), sort);
 transactionsRouter.get(
-  "/users/",
+  "/history/",
   isLogin(),
-  allowedRole("user", "admin"),
-  users
+  allowedRole("admin", "user"),
+  history
 );
 transactionsRouter.post(
   "/createTransaction/",
   isLogin(),
   allowedRole("user", "admin"),
+  imageUpload.single("image"),
   create
 );
 transactionsRouter.patch("/:id", edit);

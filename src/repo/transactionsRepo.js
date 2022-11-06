@@ -64,16 +64,19 @@ const sortTrans = (queryParams) => {
   });
 };
 
-const createTrans = (body, token) => {
+const createTrans = (body, token, file) => {
   return new Promise((resolve, reject) => {
     const query =
-      "insert into transactions (product_id, delivery_adress, promo_id, price, user_id, payment_id) values ($1, $2, $3, $4, $5, $6)";
-    const { product_id, delivery_adress, promo_id, price, payment_id } = body;
-    const value = [
+      "insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status) values ($1, $2, $3, $4, $5, $6, 'pending')";
+    let { product_id, delivery_adress, promo_id, total, payment_id } = body;
+    if (!promo_id) {
+      promo_id = 99;
+    }
+    let value = [
       product_id,
       delivery_adress,
       promo_id,
-      price,
+      total,
       token,
       payment_id,
     ];
@@ -248,75 +251,75 @@ const users2 = (queryParams) => {
   });
 };
 
-const users = (queryParams, token) => {
+const history = (queryparams, token) => {
   return new Promise((resolve, reject) => {
-    const { search, filter, order_by, order_in, page, limit, user_id } =
-      queryParams;
-    let join = "";
-    let transactions = "";
-    let group = "";
-    let dec = "order by";
-    let orderBy = order_by;
-    let orderIn = order_in;
-    let varian = "";
-    let limits = "";
-    let batas = "";
-    let offset = "";
-    let offsets = "";
-    if (
-      (filter && filter === "1") ||
-      (filter && filter === "2") ||
-      (filter && filter === "3") ||
-      (filter && filter === "4")
-    ) {
-      varian = `and varian_id = ${filter}`;
+    let query =
+      "select u.email, p.menu, t.total, t.status, p.image from transactions t inner join users u on u.id = t.user_id inner join products p on p.id = t.product_id where u.id = $1";
+    let queryLimit = "";
+    let link = `http://localhost:8080/coffee/transactions/history?`;
+    let values = [token];
+    if (queryparams.page && queryparams.limit) {
+      let page = parseInt(queryparams.page);
+      let limit = parseInt(queryparams.limit);
+      let offset = (page - 1) * limit;
+      queryLimit = query + ` limit $2 offset $3`;
+      values.push(limit, offset);
+    } else {
+      queryLimit = query;
     }
-    if (order_by !== "created_at" && order_by !== "price") {
-      dec = "";
-      orderBy = "";
-      if (
-        (order_in && order_in === "asc") ||
-        (order_in && order_in === "desc")
-      ) {
-        orderIn = "";
-      }
-    }
-    if (order_by === "transactions") {
-      // join = "join products p on p.id = t.product_id ";
-      transactions = "count(t.product_id), ";
-      group = "group by p.id, c.category_name";
-      dec = "";
-      orderBy = "";
-      if (
-        (order_in && order_in === "asc") ||
-        (order_in && order_in === "desc")
-      ) {
-        orderIn = "";
-      }
-    }
-    if (page && page > 0) {
-      batas = "limit";
-      offset = (page - 1) * limit;
-      if (limit && limit > 0) {
-        limits = limit;
-        offsets = "offset";
-      }
-    }
-    const query = `select ${transactions}p.id, p.menu, p.price, c.category_name, p.created_at, p.updated_at from transactions t 
-    join products p on t.product_id = p.id
-    join categorize c on p.varian_id = c.id 
-    join users u on t.user_id = u.id
-    ${join} where u.id = $1 and lower(menu) like lower('%${search}%') ${varian} ${group}${dec} ${orderBy} ${orderIn} ${batas} ${limits} ${offsets} ${offset}`;
-    const value = [Number(token)];
-    postgreDb.query(query, value, (err, result) => {
+    postgreDb.query(query, [token], (err, result) => {
       if (err) {
-        console.log(user_id);
-        console.log(query);
         console.log(err);
-        return reject(err);
+        return reject(new Error("Internal Server Error"));
       }
-      // console.log(query);
-      return resolve(result);
+      postgreDb.query(queryLimit, values, (err, queryresult) => {
+        if (err) {
+          console.log(err);
+          return reject(err);
+        }
+        if (queryresult.rows.length == 0)
+          return reject(new Error("History Not Found"));
+        let resNext = null;
+        let resPrev = null;
+        if (queryparams.page && queryparams.limit) {
+          let page = parseInt(queryparams.page);
+          let limit = parseInt(queryparams.limit);
+          let start = (page - 1) * limit;
+          let end = page * limit;
+          let next = "";
+          let prev = "";
+          const dataNext = Math.ceil(result.rowCount / limit);
+          if (start <= result.rowCount) {
+            next = page + 1;
+          }
+          if (end > 0) {
+            prev = page - 1;
+          }
+          if (parseInt(next) <= parseInt(dataNext)) {
+            resNext = `${link}page=${next}&limit=${limit}`;
+          }
+          if (parseInt(prev) !== 0) {
+            resPrev = `${link}page=${prev}&limit=${limit}`;
+          }
+          let sendResponse = {
+            dataCount: result.rowCount,
+            next: resNext,
+            prev: resPrev,
+            totalPage: Math.ceil(result.rowCount / limit),
+            data: queryresult.rows,
+          };
+          // console.log(result);
+          return resolve(sendResponse);
+        }
+        let sendResponse = {
+          dataCount: result.rowCount,
+          next: resNext,
+          prev: resPrev,
+          totalPage: null,
+          data: queryresult.rows,
+        };
+        return resolve(sendResponse);
+      });
     });
   });
 };
@@ -327,7 +330,7 @@ const repoTrans = {
   editTrans,
   paginasi,
   paginasi2,
-  users,
+  history,
   users2,
 };
 

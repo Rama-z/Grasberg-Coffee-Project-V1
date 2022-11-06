@@ -179,12 +179,24 @@ const paginasi = (queryParams) => {
   });
 };
 
-const create = (body, params, file) => {
+const create = (body, file) => {
   return new Promise((resolve, reject) => {
-    const query =
-      "insert into products (menu, price, varian_id, image) values ($1, $2, $3, $4)";
-    const { menu, price, varian_id } = body;
-    const value = [menu, price, varian_id, `${file.filename}`];
+    let query =
+      "insert into products (menu, price, varian_id, description) values ($1, $2, $3, $4)";
+    const { menu, price, varian_id, description } = body;
+    let value = [menu, price, varian_id, description];
+    if (file) {
+      console.log(file);
+      console.log("masuk sini");
+      if (Object.keys(body).length === 0) {
+        query = `insert into products (menu, price, varian_id, description, image) values ('unset', 99, 99, 'default', $1) returning id`;
+        value = [`${file.filename}`];
+      }
+      if (Object.keys(body).length > 0) {
+        query = `insert into products (menu, price, varian_id, description, image) values ($1, $2, $3, $4, $5) returning id`;
+        value.push(`${file.filename}`);
+      }
+    }
     postgreDb.query(query, value, (err, result) => {
       if (err) {
         return reject(err);

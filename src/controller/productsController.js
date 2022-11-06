@@ -63,7 +63,7 @@ const paginasi = async (req, res) => {
 
 const createWithImage = async (req, res) => {
   try {
-    const response = await repoProducts.create(req.body, req.params, req.file);
+    const response = await repoProducts.create(req.body, req.file);
     res.status(200).json({
       qqq: req.file,
       msg: "Input Sukses Sila Check di List Products, dan Update Id Products",
@@ -71,7 +71,6 @@ const createWithImage = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({
-      filename: req.file.filename,
       msg: "Masukkan Data Dengan Tepat",
     });
   }
