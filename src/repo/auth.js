@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = require("../config/postgre");
+const database = require("../config/postgre");
 module.exports = {
   login: (body) => {
     return new Promise((resolve, reject) => {
@@ -9,7 +9,7 @@ module.exports = {
       const getPasswordByEmailQuery =
         "SELECT id, username, pass, roles FROM users WHERE email = $1";
       const getPasswordByEmailValues = [email];
-      db.query(
+      database.query(
         getPasswordByEmailQuery,
         getPasswordByEmailValues,
         (err, response) => {
@@ -19,11 +19,13 @@ module.exports = {
           }
           if (response.rows.length === 0)
             return reject({
-              err: new Error("Email/Password is Wrong"),
+              err: new Error("Email/Password is Wrong panjang"),
               statusCode: 401,
             });
           // 2. apakah password yang tertera di DB sama dengan yang di input
           const hashedPassword = response.rows[0].pass;
+          console.log(pass);
+          console.log(hashedPassword);
           bcrypt.compare(pass, hashedPassword, (err, isSame) => {
             if (err) {
               console.log(err);
@@ -31,7 +33,7 @@ module.exports = {
             }
             if (!isSame)
               return reject({
-                err: new Error("Email/Password is Wrong"),
+                err: new Error("Email/Password is Wrong compare"),
                 statusCode: 401,
               });
             // 3. proses login => create jwt => return jwt to user
@@ -42,6 +44,7 @@ module.exports = {
               email,
               role: response.rows[0].roles,
             };
+            console.log("jwt lewat sini");
             jwt.sign(
               payload,
               process.env.SECRET_KEY,
@@ -71,7 +74,7 @@ module.exports = {
   logout: (token) => {
     return new Promise((resolve, reject) => {
       const query = "insert into blacklist(token) values($1)";
-      db.query(query, [token], (error, result) => {
+      database.query(query, [token], (error, result) => {
         if (error) {
           console.log(error);
           return reject(error);

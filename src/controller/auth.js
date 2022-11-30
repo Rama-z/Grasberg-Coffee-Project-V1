@@ -1,11 +1,12 @@
 const authRepo = require("../repo/auth");
+const sendResponse = require("../helper/response");
 
 module.exports = {
   login: (req, res) => {
     authRepo
       .login(req.body)
       .then((response) => {
-        return res.status(200).json({
+        sendResponse.success(res, 200, {
           data: response,
           msg: "Login Success",
         });

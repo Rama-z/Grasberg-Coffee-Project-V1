@@ -19,22 +19,18 @@ const isLogin = () => {
       if (result.rows.length !== 0)
         return res.status(403).json({ msg: "You have to login" });
       // verifikasi JWT
-      jwt.verify(
-        token,
-        process.env.SECRET_KEY,
-        // { issuer: process.env.ISSUER_KEY },
-        (err, decodedPayload) => {
-          if (err) {
-            console.log(err);
-            return res.status(500).json({
-              msg: err.name,
-            });
-          }
-          req.userPayload = decodedPayload;
-          req.token = token;
-          next();
+      console.log("jwt lewat sini2");
+      jwt.verify(token, process.env.SECRET_KEY, (err, decodedPayload) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({
+            msg: err.name,
+          });
         }
-      );
+        req.userPayload = decodedPayload;
+        req.token = token;
+        next();
+      });
     });
   };
 };

@@ -16,20 +16,19 @@ const app = express();
 //Import Controller
 const {
   getProductsbyId,
-  paginasi,
-  createWithImage,
+  getAllProduct,
+  create,
   editProduct,
   drop,
-} = require("../controller/productsController");
+} = require("../controller/products");
 // buat router
 const productsRouter = express.Router();
 
 // Menjalankan query
 // http://localhost:8080/api/v1/products
 // Tidak perlu menuliskan kembali di get karena ini subrouter
+productsRouter.get("/", getAllProduct);
 productsRouter.get("/:id", getProductsbyId);
-productsRouter.get("/", paginasi);
-
 // http://localhost:8080/api/v1/products
 
 productsRouter.post(
@@ -37,16 +36,12 @@ productsRouter.post(
   isLogin(),
   allowedRole("admin"),
   imageUpload.single("image"),
-  createWithImage
+  create
 );
+
 // agar dinamis menggunakan :id
 
-productsRouter.patch(
-  "/image/:id",
-  isLogin(),
-  imageUpload.single("image"),
-  editProduct
-);
+productsRouter.patch("/image/:id", imageUpload.single("image"), editProduct);
 
 productsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
 

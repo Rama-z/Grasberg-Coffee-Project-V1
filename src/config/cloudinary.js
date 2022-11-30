@@ -1,4 +1,5 @@
 const cloudinary = require("cloudinary").v2;
+require("dotenv");
 
 cloudinary.consif({
   cloud_name: process.env.CLOUDINARY_NAME,

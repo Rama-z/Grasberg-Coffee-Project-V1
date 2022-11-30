@@ -10,7 +10,7 @@ const {
   edit,
   history,
   drop,
-} = require("../controller/transactionsController");
+} = require("../controller/transactions");
 
 // buat router
 const transactionsRouter = express.Router();
@@ -22,6 +22,7 @@ transactionsRouter.get(
   allowedRole("admin", "user"),
   history
 );
+
 transactionsRouter.post(
   "/createTransaction/",
   isLogin(),
@@ -29,7 +30,15 @@ transactionsRouter.post(
   imageUpload.single("image"),
   create
 );
-transactionsRouter.patch("/:id", edit);
+
+transactionsRouter.patch(
+  "/:id",
+  isLogin(),
+  allowedRole("admin"),
+  imageUpload.single("image"),
+  edit
+);
+
 transactionsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
 
 // Export routernya

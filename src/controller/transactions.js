@@ -1,6 +1,7 @@
 // import repo
 
-const repoTransaction = require("../repo/transactionsRepo");
+const repoTransaction = require("../repo/transactions");
+const sendResponse = require("../helper/response");
 
 const sort = async (req, res) => {
   try {
@@ -26,7 +27,7 @@ const sort = async (req, res) => {
       Number(req.query.page) === 1 || Number(req.query.page) === 0
         ? null
         : `${host}?page=${Number(req.query.page) - 1}&${link}`;
-    res.status(200).json({
+    return res.status(200).json({
       meta: {
         count: Number(responsea.rows[0].count),
         next: nextLink,
@@ -36,50 +37,32 @@ const sort = async (req, res) => {
       result: response.rows,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "internal server error",
-    });
+    return sendResponse.error(res, 500, err);
   }
 };
 
 const history = async (req, res) => {
   try {
-    console.log(req.query);
-    console.log(req.userPayload);
     const response = await repoTransaction.history(
       req.query,
       req.userPayload.user_id
     );
-    // console.log(response);
-    res.status(200).json({
-      result: response,
-    });
+    return sendResponse.success(res, response.status, response);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "Masukkan Data Dengan Tepat",
-    });
+    return sendResponse.error(res, err.status, err);
   }
 };
 
 const create = async (req, res) => {
   try {
-    console.log(req.userPayload);
-    const response = await repoTransaction.createTrans(
+    const response = await repoTransaction.create(
       req.body,
       req.userPayload.user_id,
       req.file
     );
-    res.status(200).json({
-      img: req.file,
-      msg: "Input Sukses Sila Check di List Products, dan Update Id Products",
-    });
+    return sendResponse.success(res, 200, response);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "Masukkan Data Dengan Tepat",
-    });
+    return sendResponse.error(res, 500, err);
   }
 };
 
@@ -90,29 +73,18 @@ const edit = async (req, res) => {
       req.params,
       req.file
     );
-    res.status(200).json({
-      msg: "Data berhasil diedit, sila check list Products",
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      msg: "Internal Server Error",
-    });
+    return sendResponse.success(res, response.status, response);
+  } catch (err) {
+    return sendResponse.error(res, err.status, err);
   }
 };
 
 const drop = async (req, res) => {
   try {
-    await repoTransaction.drop(req.params.id);
-    sendResponse.success(res, 200, {
-      msg: "Delete Profile Success",
-    });
+    const response = await repoTransaction.drop(req.params.id);
+    return sendResponse.success(res, response.status, response);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      asd: err,
-      msg: "Internal Server Errorr",
-    });
+    return sendResponse.error(res, err.status, err);
   }
 };
 

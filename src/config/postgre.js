@@ -1,6 +1,5 @@
 const { Pool } = require("pg");
 require("dotenv").config();
-
 // isi info database
 const db = new Pool({
   host: process.env.DB_HOST_DEV,

@@ -1,8 +1,16 @@
 module.exports = {
   success: (res, status, result) => {
-    res.status(status).json({ result });
+    const results = {
+      status,
+      meta: result.meta || null,
+      msg: result.msg,
+      data: result.data || null,
+    };
+    res.status(status).json(results);
   },
-  error: (res, status, msg) => {
-    res.status(status).json({ msg });
+  error: (res, status, error) => {
+    res
+      .status(status)
+      .json({ status, msg: error.msg, data: error.data || null });
   },
 };

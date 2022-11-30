@@ -1,26 +1,22 @@
 // inmport repository
-const repoProducts = require("../repo/productsRepo");
+const repoProducts = require("../repo/products");
 const sendResponse = require("../helper/response.js");
 
 const getProductsbyId = async (req, res) => {
   try {
     const response = await repoProducts.getProductById(req.params.id);
-    res.status(200).json({ result: response.rows[0] });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      msg: "internal server error",
-    });
+    return sendResponse.success(res, response.status, response);
+  } catch (err) {
+    return sendResponse.error(res, err.status, err);
   }
 };
 
-const paginasi = async (req, res) => {
+const getAllProduct = async (req, res) => {
   try {
-    const responsea = await repoProducts.paginasi2(req.query);
-    const response = await repoProducts.paginasi(req.query);
+    const responsea = await repoProducts.getAllProduct2(req.query);
+    const response = await repoProducts.getAllProduct(req.query);
     let totalPage = Number(responsea.rows[0].count);
     let totalPages = "";
-    console.log(req.query.limit);
     if (!req.query.limit) {
       totalPages = 1;
     } else {
@@ -44,7 +40,7 @@ const paginasi = async (req, res) => {
       Number(req.query.page) === 1 || Number(req.query.page) === 0
         ? null
         : `${host}?page=${Number(req.query.page) - 1}&${link}`;
-    res.status(200).json({
+    return res.status(200).json({
       meta: {
         count: Number(responsea.rows[0].count),
         next: nextLink,
@@ -54,25 +50,16 @@ const paginasi = async (req, res) => {
       result: response.rows,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "internal server error",
-    });
+    return sendResponse.error(res, err.status, err);
   }
 };
 
-const createWithImage = async (req, res) => {
+const create = async (req, res) => {
   try {
     const response = await repoProducts.create(req.body, req.file);
-    res.status(200).json({
-      qqq: req.file,
-      msg: "Input Sukses Sila Check di List Products, dan Update Id Products",
-    });
+    return sendResponse.success(res, response.status, response);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      msg: "Masukkan Data Dengan Tepat",
-    });
+    return sendResponse.error(res, err.status, err);
   }
 };
 
@@ -83,40 +70,26 @@ const editProduct = async (req, res) => {
       req.params,
       req.file
     );
-    res.status(200).json({
-      asd: req.file,
-      msg: "Data berhasil diedit, sila check list Products",
-      Menu: response.rows[0].menu,
-      Price: response.rows[0].price,
-      Varian_id: response.rows[0].varian_id,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      msg: "Internal Server Errorr",
-    });
+    return sendResponse.success(res, response.status, response);
+  } catch (err) {
+    console.log(err);
+    return sendResponse.error(res, 500, err);
   }
 };
 
 const drop = async (req, res) => {
   try {
-    await repoProducts.drop(req.params.id);
-    sendResponse.success(res, 200, {
-      msg: "Delete Profile Success",
-    });
+    const response = await repoProducts.drop(req.params.id);
+    return sendResponse.success(res, 200, response);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      asd: err,
-      msg: "Internal Server Errorr",
-    });
+    return sendResponse.error(res, err.status, err);
   }
 };
 
 module.exports = {
   getProductsbyId,
-  paginasi,
-  createWithImage,
+  getAllProduct,
+  create,
   editProduct,
   drop,
 };

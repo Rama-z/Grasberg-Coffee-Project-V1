@@ -3,7 +3,6 @@ require("dotenv").config();
 // Impor Express
 const express = require("express");
 const multer = require("multer");
-
 // import db
 const postgreDb = require("./src/config/postgre");
 
@@ -14,16 +13,17 @@ const mainRouter = require("./src/route/mainrouter");
 const server = express();
 
 // Menyiapkan port tempat server berjalan
-const PORT = 8080;
+const PORT = process.env.PORT;
 
 // Menyiapkan Cors
 const cors = require("cors");
-const corsOptions = {
-  origin: "http://localhost:3000",
-  credentials: true,
-  optionSuccessStatus: 200,
-};
+// const corsOptions = {
+//   origin: "http://localhost:3000",
+//   credentials: true,
+//   optionSuccessStatus: 200,
+// };
 
+require("./src/config/redis");
 // Melakukan koneksi ke database(connect merupakan promise, bisa ditangani dengan callback /pun promise)
 postgreDb
   .connect()

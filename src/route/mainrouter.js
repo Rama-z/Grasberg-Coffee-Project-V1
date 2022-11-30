@@ -7,10 +7,10 @@ const mainRouter = express.Router();
 const prefix = "/api/v1";
 
 // Import subrouter
-const productsRouter = require("./productsRouter");
-const promosRouter = require("./promosRouter");
-const transactionsRouter = require("./transactionRouter");
-const usersRouter = require("./usersRouter");
+const productsRouter = require("./products");
+const promosRouter = require("./promos");
+const transactionsRouter = require("./transactions");
+const usersRouter = require("./users");
 const authRouter = require("./auth");
 
 // import middleware
@@ -25,7 +25,7 @@ mainRouter.use(`${prefix}/auth`, authRouter);
 
 // Pemasangan route
 // http://localhost:8080/
-mainRouter.get("/", (req, res) => {
+mainRouter.get("/welcome", (req, res) => {
   res.json({
     msg: "welcome in Grasberg Coffee",
   });

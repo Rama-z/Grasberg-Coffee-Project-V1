@@ -1,115 +1,83 @@
-const postgreDb = require("../config/postgre");
+const database = require("../config/postgre");
 
-const sortTrans = (queryParams) => {
-  return new Promise((resolve, reject) => {
-    const { search, filter, order_by, order_in } = queryParams;
-    let transactions = "";
-    let group = "";
-    let dec = "order by";
-    let orderBy = order_by;
-    let orderIn = order_in;
-    let varian = "";
-    if (
-      (filter && filter === "1") ||
-      (filter && filter === "2") ||
-      (filter && filter === "3") ||
-      (filter && filter === "4")
-    ) {
-      varian = `and varian_id = ${filter}`;
-    }
-    if (
-      order_by !== "created_at" &&
-      order_by !== "price" &&
-      order_by !== "transactions"
-    ) {
-      dec = "";
-      orderBy = "";
-      if (
-        (order_in && order_in === "asc") ||
-        (order_in && order_in === "desc")
-      ) {
-        orderIn = "";
-      }
-    }
-    if (order_by === "transactions") {
-      transactions = "count(*), ";
-      group =
-        "group by p.id, u.username, c.category_name, t.created_at, p2.codes, t.id";
-      dec = "";
-      orderBy = "";
-      if (
-        (order_in && order_in === "asc") ||
-        (order_in && order_in === "desc")
-      ) {
-        orderIn = "";
-      }
-    }
-    const query = `select ${transactions} t.id, u.username, p.menu, p.price, c.category_name, p.created_at, t.created_at, p2.codes from transactions t 
-    join users u on t.user_id = u.id 
-    join products p on t.product_id = p.id 
-    join promos p2 on t.promo_id = p2.id 
-    join categorize c on p.varian_id = c.id
-    where lower(menu) like lower('%${search}%') 
-    ${varian} ${group} ${dec} ${orderBy} ${orderIn}`;
-    const value = [];
-    postgreDb.query(query, value, (err, result) => {
-      if (err) {
-        console.log(query);
-        console.log(err);
-        return reject(err);
-      }
-      console.log(query);
-      return resolve(result);
-    });
-  });
-};
-
-const createTrans = (body, token, file) => {
+const create = (body, token, file) => {
   return new Promise((resolve, reject) => {
     const query =
-      "insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status) values ($1, $2, $3, $4, $5, $6, 'pending')";
-    let { product_id, delivery_adress, promo_id, total, payment_id } = body;
-    if (!promo_id) {
-      promo_id = 99;
-    }
+      "insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status) values ($1, $2, $3, $4, $5, $6, 'pending') returning *";
+    const { product_id, delivery_adress, promo_id, total, payment_id } = body;
     let value = [
       product_id,
       delivery_adress,
-      promo_id,
+      promo_id ? promo_id : 99,
       total,
       token,
-      payment_id,
+      payment_id ? payment_id : 1,
     ];
-    postgreDb.query(query, value, (err, result) => {
+    if (file) {
+      query = `insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status, image) values ($1, $2, $3, $4, $5, $6, 'pending', $7) returning *`;
+      value.push(`${file.filename}`);
+    }
+    database.query(query, value, (err, result) => {
       if (err) {
-        return reject(err);
+        console.log(err);
+        if (!product_id)
+          return reject({
+            status: 404,
+            msg: "Input your product",
+          });
+        if (!total)
+          return reject({
+            status: 404,
+            msg: "Input total amount of your purchasing",
+          });
+        return reject({
+          status: 500,
+          msg: "Internal Server Error",
+        });
       }
-      return resolve(result);
+      return resolve({
+        status: 200,
+        msg: "Transactions successfully created",
+        data: result.rows[0],
+      });
     });
   });
 };
 
-const editTrans = (body, params) => {
+const editTrans = (body, params, file) => {
   return new Promise((resolve, reject) => {
     let query = "update transactions set ";
     const value = [];
     Object.keys(body).forEach((key, idx, array) => {
       if (idx === array.length - 1) {
-        query += `${key} = $${idx + 1} where id = $${idx + 2};`;
+        query += `${key} = $${idx + 1} where id = $${idx + 2} returning *`;
         value.push(body[key], params.id);
         return;
       }
-      query += `${key} = $${idx + 1},`;
+      query += `${key} = $${idx + 1}, `;
       value.push(body[key]);
     });
-    postgreDb
+    database
       .query(query, value)
       .then((response) => {
-        resolve(response);
+        if (response.rows.length === 0)
+          return reject({
+            status: 404,
+            msg: "Transaction not found",
+          });
+        resolve({
+          status: 200,
+          msg: "Transaction successfully Edited",
+          data: response.rows[0],
+        });
       })
       .catch((err) => {
+        console.log(query);
         console.log(err);
-        reject(err);
+        reject({
+          status: 500,
+          msg: "internal Server Error",
+        });
       });
   });
 };
@@ -133,14 +101,19 @@ const paginasi2 = (queryParams) => {
     join categorize c on p.varian_id = c.id 
     where lower(menu) like lower('%${search}%') ${varian}`;
     const value = [];
-    postgreDb.query(query, value, (err, result) => {
+    database.query(query, value, (err, result) => {
       if (err) {
-        console.log(query);
         console.log(err);
-        return reject(err);
+        return reject({
+          status: 500,
+          msg: "internal server error",
+        });
       }
-      console.log(query);
-      return resolve(result);
+      return resolve({
+        status: 200,
+        msg: "success",
+        data: result,
+      });
     });
   });
 };
@@ -179,7 +152,6 @@ const paginasi = (queryParams) => {
       }
     }
     if (order_by === "transactions") {
-      // join = "join products p on p.id = t.product_id ";
       transactions = "count(t.product_id), ";
       group = "group by p.id, c.category_name";
       dec = "";
@@ -204,49 +176,20 @@ const paginasi = (queryParams) => {
     join categorize c on p.varian_id = c.id 
     ${join} where lower(menu) like lower('%${search}%') ${varian} ${group} ${dec} ${orderBy} ${orderIn} ${batas} ${limits} ${offsets} ${offset}`;
     const value = [];
-    postgreDb.query(query, value, (err, result) => {
+    database.query(query, value, (err, result) => {
       if (err) {
-        console.log(query);
         console.log(err);
-        return reject(err);
+        return reject({
+          status: 500,
+          msg: "Internal server error",
+        });
       }
-      console.log(query);
-      return resolve(result);
-    });
-  });
-};
-
-const users2 = (queryParams) => {
-  return new Promise((resolve, reject) => {
-    const { search, filter, order_by, order_in, user_id } = queryParams;
-    let varian = "";
-    let group = "";
-    if (
-      (filter && filter === "1") ||
-      (filter && filter === "2") ||
-      (filter && filter === "3") ||
-      (filter && filter === "4")
-    ) {
-      varian = `and varian_id = ${filter}`;
-    }
-    if (order_by === "transactions") {
-      group = "group by u.id";
-    }
-    const query = `select count(t.product_id) from transactions t 
-    join users u on t.user_id = u.id 
-    join products p on t.product_id = p.id 
-    join promos p2 on t.promo_id = p2.id 
-    join categorize c on p.varian_id = c.id 
-    where u.id = $1 and lower(menu) like lower('%${search}%') ${varian} ${group}`;
-    const value = [Number(user_id)];
-    postgreDb.query(query, value, (err, result) => {
-      if (err) {
-        // console.log(query);
-        console.log(err);
-        return reject(err);
-      }
-      // console.log(query);
-      return resolve(result);
+      console.log(result.rows);
+      return resolve({
+        status: 200,
+        msg: "Transactions success to be displayed",
+        data: result.rows,
+      });
     });
   });
 };
@@ -256,7 +199,7 @@ const history = (queryparams, token) => {
     let query =
       "select u.email, p.menu, t.total, t.status, p.image from transactions t inner join users u on u.id = t.user_id inner join products p on p.id = t.product_id where u.id = $1";
     let queryLimit = "";
-    let link = `http://localhost:8080/coffee/transactions/history?`;
+    let link = `http://localhost:8080/api/v1/transactions/history?`;
     let values = [token];
     if (queryparams.page && queryparams.limit) {
       let page = parseInt(queryparams.page);
@@ -267,18 +210,27 @@ const history = (queryparams, token) => {
     } else {
       queryLimit = query;
     }
-    postgreDb.query(query, [token], (err, result) => {
+    database.query(query, [token], (err, result) => {
       if (err) {
         console.log(err);
-        return reject(new Error("Internal Server Error"));
+        return reject({
+          status: 500,
+          msg: "Internal server error",
+        });
       }
-      postgreDb.query(queryLimit, values, (err, queryresult) => {
+      database.query(queryLimit, values, (err, queryresult) => {
         if (err) {
           console.log(err);
-          return reject(err);
+          return reject({
+            status: 501,
+            msg: "Internal server error",
+          });
         }
         if (queryresult.rows.length == 0)
-          return reject(new Error("History Not Found"));
+          return reject({
+            status: 404,
+            msg: "History not found",
+          });
         let resNext = null;
         let resPrev = null;
         if (queryparams.page && queryparams.limit) {
@@ -306,32 +258,61 @@ const history = (queryparams, token) => {
             next: resNext,
             prev: resPrev,
             totalPage: Math.ceil(result.rowCount / limit),
-            data: queryresult.rows,
           };
-          // console.log(result);
-          return resolve(sendResponse);
+          return resolve({
+            status: 200,
+            msg: "History successfully showned",
+            meta: sendResponse,
+            data: queryresult.rows,
+          });
         }
-        let sendResponse = {
+        sendResponse = {
           dataCount: result.rowCount,
           next: resNext,
           prev: resPrev,
           totalPage: null,
-          data: queryresult.rows,
         };
-        return resolve(sendResponse);
+        return resolve({
+          status: 200,
+          msg: "History successfully showned",
+          meta: sendResponse,
+          data: queryresult.rows,
+        });
+      });
+    });
+  });
+};
+
+const drop = (queryParams) => {
+  return new Promise((resolve, reject) => {
+    const query = "delete from transactions where id = $1 returning *";
+    const value = [queryParams];
+    database.query(query, value, (err, result) => {
+      if (err) {
+        console.log(err);
+        return reject({
+          status: 500,
+          msg: "Internal server error",
+        });
+      }
+      if (result.rows.length === 0)
+        return reject({ status: 404, msg: "Data not found" });
+      return resolve({
+        status: 200,
+        msg: "Delete transactions success",
+        data: result.rows[0],
       });
     });
   });
 };
 
 const repoTrans = {
-  sortTrans,
-  createTrans,
+  create,
   editTrans,
   paginasi,
   paginasi2,
   history,
-  users2,
+  drop,
 };
 
 module.exports = repoTrans;
