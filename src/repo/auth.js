@@ -59,6 +59,7 @@ module.exports = {
                 }
                 return resolve({
                   token,
+                  id: payload.user_id,
                   name: payload.name,
                   email: payload.email,
                   role: payload.role,
