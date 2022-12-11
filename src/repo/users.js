@@ -78,7 +78,7 @@ const register = (body) => {
       }
       bcrypt.hash(pass, 10, (error, hashedPwd) => {
         if (error) {
-          return reject({ status: 500, msg: "internal server error" });
+          return reject({ status: 502, msg: "internal server error" });
         }
         const role = "user";
         database.query(
@@ -97,7 +97,7 @@ const register = (body) => {
           (err, result) => {
             if (err) {
               console.log(err);
-              return reject({ status: 500, msg: "Internal Server Error" });
+              return reject({ status: 501, msg: "Internal Server Error" });
             }
             return resolve({
               status: 201,
