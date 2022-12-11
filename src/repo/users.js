@@ -97,7 +97,10 @@ const register = (body) => {
           (err, result) => {
             if (err) {
               console.log(err);
-              return reject({ status: 501, msg: "Internal Server Error" });
+              return reject({
+                status: 501,
+                msg: `Internal Server Error ${err}`,
+              });
             }
             return resolve({
               status: 201,
