@@ -62,6 +62,7 @@ const create = async (req, res) => {
     );
     return sendResponse.success(res, 200, response);
   } catch (err) {
+    console.log("sinic");
     return sendResponse.error(res, 500, err);
   }
 };

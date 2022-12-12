@@ -3,6 +3,9 @@ const express = require("express");
 const isLogin = require("../middleware/isLogin");
 const imageUpload = require("../middleware/upload");
 const allowedRole = require("../middleware/allowedRole");
+const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
+const cloud = require("../middleware/cloudinary");
+
 // import controller
 const {
   sort,
@@ -27,7 +30,8 @@ transactionsRouter.post(
   "/createTransaction/",
   isLogin(),
   allowedRole("user", "admin"),
-  imageUpload.single("image"),
+  memoryStorageUploadProfile,
+  cloud.uploaderTrans,
   create
 );
 
@@ -35,7 +39,8 @@ transactionsRouter.patch(
   "/:id",
   isLogin(),
   allowedRole("admin"),
-  imageUpload.single("image"),
+  memoryStorageUploadProfile,
+  cloud.uploaderTrans,
   edit
 );
 

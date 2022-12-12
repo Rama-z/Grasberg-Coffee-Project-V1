@@ -19,7 +19,6 @@ const isLogin = () => {
       if (result.rows.length !== 0)
         return res.status(403).json({ msg: "You have to login" });
       // verifikasi JWT
-      console.log("jwt lewat sini2");
       jwt.verify(token, process.env.SECRET_KEY, (err, decodedPayload) => {
         if (err) {
           console.log(err);

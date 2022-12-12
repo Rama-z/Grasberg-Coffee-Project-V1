@@ -4,7 +4,7 @@ const isLogin = require("../middleware/isLogin");
 const allowedRole = require("../middleware/allowedRole");
 const imageUpload = require("../middleware/upload");
 const app = express();
-const uploader = require("../middleware/cloudinary");
+const cloud = require("../middleware/cloudinary");
 const { uploaderProfile } = require("../middleware/cloudinaryProduct");
 const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
 // const skipImage = require("../middleware/skipImage");
@@ -39,8 +39,7 @@ productsRouter.post(
   isLogin(),
   allowedRole("admin"),
   memoryStorageUploadProfile,
-  // imageUpload.single("image"),
-  uploader,
+  cloud.uploader,
   create
 );
 
