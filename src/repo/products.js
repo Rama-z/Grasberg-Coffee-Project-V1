@@ -4,7 +4,7 @@ const database = require("../config/postgre");
 const getProductById = (id) => {
   return new Promise((resolve, reject) => {
     const query =
-      "select p.id, p.menu, p.price, p.image, c.category_name, p.description from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id where p.id = $1 group by p.id, menu, p.price , image, c.category_name , description";
+      "select p.id, p.menu, p.price, p.image, c.category_name, p.description from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name , description";
     database.query(query, [id], (err, result) => {
       if (err) {
         console.log(err);
