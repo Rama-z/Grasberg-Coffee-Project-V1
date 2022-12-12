@@ -150,11 +150,11 @@ const create = (body, file) => {
     if (file) {
       if (Object.keys(body).length === 0) {
         query = `insert into products (menu, price, varian_id, description, image) values ('unset', 99, 99, 'default', $1) returning *`;
-        value = [`${file.filename}`];
+        value = [`${file.secure_url}`];
       }
       if (Object.keys(body).length > 0) {
         query = `insert into products (menu, price, varian_id, description, image) values ($1, $2, $3, $4, $5) returning *`;
-        value.push(`${file.filename}`);
+        value.push(`${file.secure_url}`);
       }
     }
     database.query(query, value, (err, result) => {
