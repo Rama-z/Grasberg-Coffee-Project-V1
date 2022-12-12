@@ -45,7 +45,7 @@ const create = (body, token, file) => {
   });
 };
 
-const editTrans = (body, params, file) => {
+const editTrans = (body, params) => {
   return new Promise((resolve, reject) => {
     let query = "update transactions set ";
     const value = [];
