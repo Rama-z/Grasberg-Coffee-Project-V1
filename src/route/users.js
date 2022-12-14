@@ -32,9 +32,6 @@ usersRouter.patch(
   usersController.editPassword
 );
 
-// Register account
-usersRouter.post("/register/", usersController.register);
-
 // Edit profile
 usersRouter.patch(
   "/editProfile",

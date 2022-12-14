@@ -28,16 +28,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const register = async (req, res) => {
-  try {
-    const { body } = req;
-    const response = await userRepo.register(body);
-    return sendResponse.success(res, response.status, response);
-  } catch (err) {
-    return sendResponse.error(res, err.status, err);
-  }
-};
-
 const editPassword = (req, res) => {
   userRepo
     .editPassword(req.body, req.userPayload.user_id)
@@ -68,7 +58,6 @@ const update = async (req, res) => {
 const userController = {
   getUser,
   deleteUser,
-  register,
   editPassword,
   getUserById,
   update,

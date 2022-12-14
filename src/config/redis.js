@@ -12,5 +12,13 @@ Client.on("ready", () => console.log("redis ready to use"));
 
 Client.on("error", (err) => console.log(err.message));
 
+Client.on("end", () => {
+  console.log("Client disconnected from redis");
+});
+
+process.on("SIGINT", () => {
+  Client.quit();
+});
+
 Client.connect().then();
 module.exports = Client;

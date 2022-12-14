@@ -31,7 +31,7 @@ const productsRouter = express.Router();
 // http://localhost:8080/api/v1/products
 // Tidak perlu menuliskan kembali di get karena ini subrouter
 productsRouter.get("/", getAllProduct);
-productsRouter.get("/:id", getProductsbyId);
+productsRouter.get("/:id", isLogin(), getProductsbyId);
 // http://localhost:8080/api/v1/products
 
 productsRouter.post(

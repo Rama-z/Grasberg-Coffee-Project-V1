@@ -17,7 +17,6 @@ const create = (body, token, file) => {
       query = `insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status, image) values ($1, $2, $3, $4, $5, $6, 'pending', $7) returning *`;
       value.push(`${file.secure_url}`);
     }
-    console.log("sini3");
     database.query(query, value, (err, result) => {
       if (err) {
         console.log(err);
