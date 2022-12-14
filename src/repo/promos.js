@@ -8,13 +8,12 @@ const search = (queryParams) => {
     const value = [`%${codes}%`, `%${menu}%`];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal server error" });
+        return reject({ status: 500, message: "Internal server error", err });
       }
       return resolve({
         status: 200,
         data: result.rows,
-        msg: "Promo success for being shown",
+        message: "Promo success for being shown",
       });
     });
   });
@@ -82,10 +81,10 @@ const getAllPromo = (queryParams) => {
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal message error",
+          message: "Internal message error",
+          err,
         });
       }
       return resolve(result);
@@ -111,13 +110,12 @@ const create = (body, file) => {
     }
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal server error" });
+        return reject({ status: 500, message: "Internal server error", err });
       }
       return resolve({
         status: 200,
         data: result.rows[0],
-        msg: "Promo is succesfully created",
+        message: "Promo is succesfully created",
       });
     });
   });
@@ -153,16 +151,15 @@ const edit = (body, params, file) => {
       .query(query, value)
       .then((response) => {
         if (response.rows.length === 0)
-          return reject({ status: 404, msg: "Data not found" });
+          return reject({ status: 404, message: "Data not found", err });
         return resolve({
           status: 200,
           data: response.rows[0],
-          msg: "Promo is successfully updated",
+          message: "Promo is successfully updated",
         });
       })
       .catch((err) => {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal server error" });
+        return reject({ status: 500, message: "Internal server error", err });
       });
   });
 };
@@ -172,11 +169,10 @@ const drop = (params) => {
     const query = "delete from promos where id = $1 returning *";
     database.query(query, [Number(params)], (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal server error" });
+        return reject({ status: 500, message: "Internal server error", err });
       }
       if (result.rows.length === 0)
-        return reject({ status: 404, msg: "Data not found" });
+        return reject({ status: 404, message: "Data not found", err });
       return resolve({ status: 200, data: result.rows });
     });
   });

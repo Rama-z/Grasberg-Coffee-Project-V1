@@ -7,7 +7,6 @@ const jwtr = new JWTR(client);
 
 module.exports = {
   login: (body) => {
-    console.log("a");
     return new Promise((resolve, reject) => {
       const { email, pass } = body;
       // 1. apakah ada email yang bersangkutan di DB
@@ -19,25 +18,32 @@ module.exports = {
         getPasswordByEmailValues,
         (err, response) => {
           if (err) {
-            console.log(err);
-            return reject({ err });
+            return reject({
+              status: 501,
+              Message: "Internal Server Error",
+              err,
+            });
           }
           if (response.rows.length === 0)
             return reject({
-              err: new Error("Email/Password is Wrong panjang"),
-              statusCode: 401,
+              status: 401,
+              message: "Email/Password is Wrong",
+              err,
             });
           // 2. apakah password yang tertera di DB sama dengan yang di input
           const hashedPassword = response.rows[0].pass;
           bcrypt.compare(pass, hashedPassword, (err, isSame) => {
             if (err) {
-              console.log(err);
-              return reject({ err });
+              return reject({
+                status: 501,
+                message: "Internal Server Error",
+                err,
+              });
             }
             if (!isSame)
               return reject({
-                err: new Error("Email/Password is Wrong compare"),
-                statusCode: 401,
+                status: 401,
+                message: "Email/Password is Wrong",
               });
             // 3. proses login => create jwt => return jwt to user
             const payload = {
@@ -69,17 +75,17 @@ module.exports = {
   register: (body) => {
     return new Promise((resolve, reject) => {
       const queries = {
-        checkEmailandPhone:
+        checkEmailAndPhone:
           "select u.phone, u.email from users u where phone = $1  or email = $2",
         userInsert:
-          "insert into users(email, pass, created_at, updated_at, roles, gender, username, adress, phone) values($1, $2, to_timestamp($3), to_timestamp($4), $5, $6, $7, $8, $9) returning id",
+          "insert into users(email, pass, created_at, updated_at, roles, gender, username, address, phone) values($1, $2, to_timestamp($3), to_timestamp($4), $5, $6, $7, $8, $9) returning id",
       };
-      const { checkEmailandPhone, userInsert } = queries;
+      const { checkEmailAndPhone, userInsert } = queries;
       const timeStamp = Date.now() / 1000;
-      const { email, pass, phone, gender, username, adress } = body;
-      database.query(checkEmailandPhone, [phone, email], (error, result) => {
-        if (error) {
-          return reject({ status: 500, msg: "Internal Server Error" });
+      const { email, pass, phone, gender, username, address } = body;
+      database.query(checkEmailAndPhone, [phone, email], (err, result) => {
+        if (err) {
+          return reject({ status: 500, message: "Internal Server Error", err });
         }
         if (result.rows.length > 0) {
           const errorMessage = [];
@@ -94,12 +100,17 @@ module.exports = {
             errorMessage.push(403, "Email already exist");
           return reject({
             status: errorMessage[0],
-            msg: errorMessage[1],
+            message: errorMessage[1],
+            err,
           });
         }
-        bcrypt.hash(pass, 10, (error, hashedPwd) => {
-          if (error) {
-            return reject({ status: 502, msg: "internal server error" });
+        bcrypt.hash(pass, 10, (err, hashedPwd) => {
+          if (err) {
+            return reject({
+              status: 502,
+              message: "internal server error",
+              err,
+            });
           }
           const role = "user";
           database.query(
@@ -112,21 +123,21 @@ module.exports = {
               role,
               gender,
               username,
-              adress,
+              address,
               phone,
             ],
             (err, result) => {
               if (err) {
-                console.log(err);
                 return reject({
                   status: 501,
-                  msg: `Internal Server Error`,
+                  message: `Internal Server Error`,
+                  err,
                 });
               }
               return resolve({
                 status: 201,
                 data: result.rows,
-                msg: `Congrats ${body.email}, your account created successfully`,
+                message: `Congrats ${body.email}, your account created successfully`,
               });
             }
           );
@@ -138,17 +149,10 @@ module.exports = {
   logout: (token) => {
     return new Promise((resolve, reject) => {
       jwtr.destroy(token.jti).then((res) => {
-        if (!res) resolve("success");
-        resolve({ message: "Logout Success." });
+        if (!res)
+          reject({ status: 501, message: "Error Response Logout", err });
+        resolve({ status: 201, message: "Logout Success." });
       });
-      // const query = "insert into blacklist(token) values($1)";
-      // database.query(query, [token], (error, result) => {
-      //   if (error) {
-      //     console.log(error);
-      //     return reject(error);
-      //   }
-      //   return resolve({ message: "Logout Success." });
-      // });
     });
   },
 };

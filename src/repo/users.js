@@ -7,8 +7,7 @@ const getUser = (queryParams) => {
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal Server Error" });
+        return reject({ status: 500, message: "Internal Server Error", err });
       }
       return resolve({
         status: 200,
@@ -24,8 +23,7 @@ const getUserById = (id) => {
       "select username, firstname, lastname, username, gender, birthday, adress, image, phone, email from users where id = $1";
     database.query(query, [id], (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal Server Error" });
+        return reject({ status: 500, message: "Internal Server Error", err });
       }
       return resolve({ status: 200, data: result.rows });
     });
@@ -37,8 +35,7 @@ const deleteUsers = (params) => {
     const query = "delete from users where id = $1";
     database.query(query, [params.id], (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal Server Error" });
+        return reject({ status: 500, message: "Internal Server Error", err });
       }
       resolve({ status: 200, data: result.rows });
     });
@@ -47,37 +44,41 @@ const deleteUsers = (params) => {
 
 const editPassword = (body, token) => {
   return new Promise((resolve, reject) => {
-    console.log("test2");
     const { old_password, new_password } = body;
     const getPwdQuery = "select pass from users where id = $1";
     const getPwdValues = [token];
     database.query(getPwdQuery, getPwdValues, (err, response) => {
       if (err) {
-        console.log(err);
-        return reject({ err });
+        return reject({ status: 500, message: "Internal Server Error", err });
       }
       const hashedPassword = response.rows[0].pass;
       bcrypt.compare(old_password, hashedPassword, (err, isSame) => {
         if (err) {
-          console.log(err);
-          return reject({ err });
+          return reject({ status: 500, message: "Internal Server Error", err });
         }
         if (!isSame)
           return reject({
-            statusCode: 403,
-            msg: new Error("Old Password is wrong"),
+            status: 403,
+            message: "Old Password is wrong",
+            err,
           });
         bcrypt.hash(new_password, 10, (err, newHashedPassword) => {
           if (err) {
-            console.log(err);
-            return reject({ err });
+            return reject({
+              status: 500,
+              message: "Internal Server Error",
+              err,
+            });
           }
           const editPwdQuery = "update users set pass = $1 WHERE id = $2";
           const editPwdValues = [newHashedPassword, token];
           database.query(editPwdQuery, editPwdValues, (err, response) => {
             if (err) {
-              console.log(err);
-              return reject({ status: 500, msg: "Internal Server Error" });
+              return reject({
+                status: 500,
+                message: "Internal Server Error",
+                err,
+              });
             }
             return resolve({ status: 200, data: response.rows });
           });
@@ -89,7 +90,6 @@ const editPassword = (body, token) => {
 
 const update = (body, id, file) => {
   return new Promise((resolve, reject) => {
-    console.log("success");
     const values = [];
     let query = "update users set ";
     let imageUrl = "";
@@ -116,15 +116,14 @@ const update = (body, id, file) => {
     });
     database.query(query, values, (err, result) => {
       if (err) {
-        console.log(err);
-        return reject({ status: 500, msg: "Internal Server Error" });
+        return reject({ status: 500, message: "Internal Server Error", err });
       }
       let data = {};
       if (file) data = { Image: imageUrl, ...result.rows[0] };
       data = { ...result.rows[0] };
       return resolve({
         status: 200,
-        msg: `${result.rows[0].username}, your profile successfully updated`,
+        message: `${result.rows[0].username}, your profile successfully updated`,
         data,
       });
     });

@@ -7,14 +7,14 @@ const getProductById = (id) => {
       "select p.id, p.menu, p.price, p.image, c.category_name, p.description from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name , description";
     database.query(query, [id], (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal message error",
+          message: "Internal message error",
+          err,
         });
       }
       if (result.rows === 0)
-        return reject({ status: 404, msg: "Product not found" });
+        return reject({ status: 404, message: "Product not found", err });
       return resolve({
         status: 200,
         data: {
@@ -96,11 +96,10 @@ const getAllProduct = (queryParams) => {
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(query);
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal message error",
+          message: "Internal message error",
+          err,
         });
       }
       return resolve(result);
@@ -130,10 +129,10 @@ const getAllProduct2 = (queryParams) => {
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal message error",
+          message: "Internal message error",
+          err,
         });
       }
       return resolve(result);
@@ -161,14 +160,14 @@ const create = (body, file) => {
       if (err) {
         return reject({
           status: 500,
-          msg: "Internal message error",
+          message: "Internal message error",
+          err,
         });
       }
-      console.log(result.rows[0]);
       return resolve({
         status: 200,
         data: result.rows[0],
-        msg: "Product successfully added",
+        message: "Product successfully added",
       });
     });
   });
@@ -179,7 +178,6 @@ const editProduct = (body, params, file) => {
     let query = "update products set ";
     const value = [];
     if (file) {
-      console.log(file.filename);
       if (Object.keys(body).length === 0) {
         const imageUrl = `${file.filename}`;
         query += `image = '${imageUrl}' where id = $1 returning menu, price, varian_id, image`;
@@ -201,20 +199,19 @@ const editProduct = (body, params, file) => {
       query += `${keys} = $${idx + 1}, `;
       value.push(body[keys]);
     });
-    console.log(query);
     database
       .query(query, value)
       .then((response) => {
         if (response.rows.length === 0) {
           return reject({
             status: 404,
-            msg: "Product not found, can't update product",
+            message: "Product not found, can't update product",
+            err,
           });
         }
-        console.log("lewat sini");
         resolve({
           status: 200,
-          msg: "Edit data success",
+          message: "Edit data success",
           data: {
             menu: response.rows[0].menu,
             price: response.rows[0].price,
@@ -231,10 +228,10 @@ const editProduct = (body, params, file) => {
         });
       })
       .catch((err) => {
-        console.log(err);
         reject({
           status: 500,
-          msg: "Failed to edit product, Internal message error",
+          message: "Failed to edit product, Internal message error",
+          err,
         });
       });
   });
@@ -245,20 +242,21 @@ const drop = (params) => {
     const query = "delete from products where id = $1 returning *";
     database.query(query, [Number(params)], (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Failed to delete product",
+          message: "Failed to delete product",
+          err,
         });
       }
       if (result.rows.length === 0)
         return reject({
           status: 404,
-          msg: "Product not found, can't update product",
+          message: "Product not found, can't update product",
+          err,
         });
       return resolve({
         status: 200,
-        msg: "Delete product success",
+        message: "Delete product success",
       });
     });
   });

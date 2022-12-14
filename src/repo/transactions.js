@@ -19,25 +19,27 @@ const create = (body, token, file) => {
     }
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
         if (!product_id)
           return reject({
             status: 404,
-            msg: "Input your product",
+            message: "Input your product",
+            err,
           });
         if (!total)
           return reject({
             status: 404,
-            msg: "Input total amount of your purchasing",
+            message: "Input total amount of your purchasing",
+            err,
           });
         return reject({
           status: 500,
-          msg: "Internal Server Error",
+          message: "Internal Server Error",
+          err,
         });
       }
       return resolve({
         status: 200,
-        msg: "Transactions successfully created",
+        message: "Transactions successfully created",
         data: result.rows[0],
       });
     });
@@ -63,20 +65,20 @@ const editTrans = (body, params) => {
         if (response.rows.length === 0)
           return reject({
             status: 404,
-            msg: "Transaction not found",
+            message: "Transaction not found",
+            err,
           });
         resolve({
           status: 200,
-          msg: "Transaction successfully Edited",
+          message: "Transaction successfully Edited",
           data: response.rows[0],
         });
       })
       .catch((err) => {
-        console.log(query);
-        console.log(err);
         reject({
           status: 500,
-          msg: "internal Server Error",
+          message: "internal Server Error",
+          err,
         });
       });
   });
@@ -103,15 +105,15 @@ const paginasi2 = (queryParams) => {
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "internal server error",
+          message: "internal server error",
+          err,
         });
       }
       return resolve({
         status: 200,
-        msg: "success",
+        message: "success",
         data: result,
       });
     });
@@ -178,16 +180,15 @@ const paginasi = (queryParams) => {
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal server error",
+          message: "Internal server error",
+          err,
         });
       }
-      console.log(result.rows);
       return resolve({
         status: 200,
-        msg: "Transactions success to be displayed",
+        message: "Transactions success to be displayed",
         data: result.rows,
       });
     });
@@ -212,24 +213,25 @@ const history = (queryparams, token) => {
     }
     database.query(query, [token], (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal server error",
+          message: "Internal server error",
+          err,
         });
       }
       database.query(queryLimit, values, (err, queryresult) => {
         if (err) {
-          console.log(err);
           return reject({
             status: 501,
-            msg: "Internal server error",
+            message: "Internal server error",
+            err,
           });
         }
         if (queryresult.rows.length == 0)
           return reject({
             status: 404,
-            msg: "History not found",
+            message: "History not found",
+            err,
           });
         let resNext = null;
         let resPrev = null;
@@ -261,7 +263,7 @@ const history = (queryparams, token) => {
           };
           return resolve({
             status: 200,
-            msg: "History successfully showned",
+            message: "History successfully showned",
             meta: sendResponse,
             data: queryresult.rows,
           });
@@ -274,7 +276,7 @@ const history = (queryparams, token) => {
         };
         return resolve({
           status: 200,
-          msg: "History successfully showned",
+          message: "History successfully showned",
           meta: sendResponse,
           data: queryresult.rows,
         });
@@ -289,17 +291,17 @@ const drop = (queryParams) => {
     const value = [queryParams];
     database.query(query, value, (err, result) => {
       if (err) {
-        console.log(err);
         return reject({
           status: 500,
-          msg: "Internal server error",
+          message: "Internal server error",
+          err,
         });
       }
       if (result.rows.length === 0)
-        return reject({ status: 404, msg: "Data not found" });
+        return reject({ status: 404, message: "Data not found", err });
       return resolve({
         status: 200,
-        msg: "Delete transactions success",
+        message: "Delete transactions success",
         data: result.rows[0],
       });
     });
