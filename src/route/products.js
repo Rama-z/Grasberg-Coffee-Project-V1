@@ -18,6 +18,7 @@ const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
 
 //Import Controller
 const {
+  getProduct,
   getProductsbyId,
   getAllProduct,
   create,
@@ -30,8 +31,10 @@ const productsRouter = express.Router();
 // Menjalankan query
 // http://localhost:8080/api/v1/products
 // Tidak perlu menuliskan kembali di get karena ini subrouter
-productsRouter.get("/", getAllProduct);
-productsRouter.get("/:id", isLogin(), getProductsbyId);
+
+// productsRouter.get("/", getAllProduct);
+productsRouter.get("/", getProduct);
+productsRouter.get("/:id", getProductsbyId);
 // http://localhost:8080/api/v1/products
 
 productsRouter.post(

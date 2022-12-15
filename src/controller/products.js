@@ -2,6 +2,15 @@ const repoProducts = require("../repo/products");
 const sendResponse = require("../helper/response.js");
 
 module.exports = {
+  getProduct: async (req, res) => {
+    try {
+      const api = `${req.protocol}://${req.get("HOST")}`;
+      const response = await repoProducts.getProduct(req.query, api);
+      return sendResponse.success(res, response.status, response);
+    } catch (err) {
+      return sendResponse.error(res, err.status || 500, err);
+    }
+  },
   getProductsbyId: async (req, res) => {
     try {
       const response = await repoProducts.getProductById(req.params.id);

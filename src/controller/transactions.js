@@ -36,7 +36,7 @@ module.exports = {
         result: response.rows,
       });
     } catch (err) {
-      return sendResponse.error(res, 500, err);
+      return sendResponse.error(res, err.status || 500, err);
     }
   },
   history: async (req, res) => {
@@ -57,9 +57,9 @@ module.exports = {
         req.userPayload.user_id,
         req.file
       );
-      return sendResponse.success(res, 200, response);
+      return sendResponse.success(res, response.status, response);
     } catch (err) {
-      return sendResponse.error(res, 500, err);
+      return sendResponse.error(res, err.status || 500, err);
     }
   },
   edit: async (req, res) => {
