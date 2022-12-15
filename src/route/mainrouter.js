@@ -1,6 +1,7 @@
 // Import Router
 const express = require("express");
 const database = require("../config/postgre");
+const client = require("../config/redis");
 // buat router
 const mainRouter = express.Router();
 
@@ -35,6 +36,9 @@ mainRouter.get("/verify/:id", function (req, res) {
   client
     .get(req.params.id)
     .then((results) => {
+      console.log(JSON.parse(results));
+      console.log(results);
+      console.log(results.email);
       if (!results)
         res.status(400).send(`
       <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%">
@@ -47,7 +51,10 @@ mainRouter.get("/verify/:id", function (req, res) {
       </div>
       `);
       if (results) {
-        const query = `update users set status = 'verified'`;
+        const query = `update users set status = 'verified' where email like '${
+          JSON.parse(results).email
+        }'`;
+        console.log(query);
         database.query(query, (err, result) => {
           if (err) {
             console.log(err);

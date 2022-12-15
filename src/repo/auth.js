@@ -83,7 +83,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const queries = {
         checkEmailAndPhone:
-          "select u.phone, u.email from users u where phone = $1  or email = $2",
+          "select  u.id, u.phone, u.email from users u where phone = $1 or email = $2",
         userInsert:
           "insert into users(email, pass, created_at, updated_at, roles, gender, username, address, phone) values($1, $2, to_timestamp($3), to_timestamp($4), $5, $6, $7, $8, $9) returning id",
       };
