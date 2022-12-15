@@ -4,6 +4,7 @@ const JWTR = require("jwt-redis").default;
 const database = require("../config/postgre");
 const client = require("../config/redis");
 const jwtr = new JWTR(client);
+const { sendMails } = require("../config/email.js");
 
 module.exports = {
   login: (body) => {
@@ -11,7 +12,7 @@ module.exports = {
       const { email, pass } = body;
       // 1. apakah ada email yang bersangkutan di DB
       const getPasswordByEmailQuery =
-        "SELECT id, username, pass, roles FROM users WHERE email = $1";
+        "SELECT id, email, username, pass, roles, status FROM users WHERE email like $1";
       const getPasswordByEmailValues = [email];
       database.query(
         getPasswordByEmailQuery,
@@ -28,6 +29,12 @@ module.exports = {
             return reject({
               status: 401,
               message: "Email/Password is Wrong",
+              err,
+            });
+          if (response.rows[0].status === "unverified")
+            return reject({
+              status: 400,
+              message: "Account not active, please verify your email first",
               err,
             });
           // 2. apakah password yang tertera di DB sama dengan yang di input
@@ -104,43 +111,64 @@ module.exports = {
             err,
           });
         }
-        bcrypt.hash(pass, 10, (err, hashedPwd) => {
-          if (err) {
-            return reject({
-              status: 502,
-              message: "internal server error",
-              err,
-            });
-          }
-          const role = "user";
-          database.query(
-            userInsert,
-            [
-              email,
-              hashedPwd,
-              timeStamp,
-              timeStamp,
-              role,
-              gender,
-              username,
-              address,
-              phone,
-            ],
-            (err, result) => {
-              if (err) {
-                return reject({
-                  status: 501,
-                  message: `Internal Server Error`,
-                  err,
-                });
-              }
-              return resolve({
-                status: 201,
-                data: result.rows,
-                message: `Congrats ${body.email}, your account created successfully`,
+        const digits = "0123456789";
+        let OTP = "";
+        for (let i = 0; i < 6; i++) {
+          OTP += digits[Math.floor(Math.random() * 10)];
+        }
+        sendMails({
+          to: email,
+          OTP: OTP,
+          name: email,
+        }).then((result) => {
+          client.get(OTP).then((results) => {
+            if (results)
+              return resolve(console.log("sukses kirim kode ke email"));
+            const data = {
+              email: email,
+              password: pass,
+            };
+            client.set(OTP, JSON.stringify(data)).then(() => {
+              bcrypt.hash(pass, 10, (err, hashedPwd) => {
+                if (err) {
+                  return reject({
+                    status: 502,
+                    message: "internal server error",
+                    err,
+                  });
+                }
+                const role = "user";
+                database.query(
+                  userInsert,
+                  [
+                    email,
+                    hashedPwd,
+                    timeStamp,
+                    timeStamp,
+                    role,
+                    gender,
+                    username,
+                    address,
+                    phone,
+                  ],
+                  (err, result) => {
+                    if (err) {
+                      return reject({
+                        status: 501,
+                        message: `Internal Server Error`,
+                        err,
+                      });
+                    }
+                    return resolve({
+                      status: 201,
+                      data: result.rows,
+                      message: `Congrats ${body.email}, your account created successfully`,
+                    });
+                  }
+                );
               });
-            }
-          );
+            });
+          });
         });
       });
     });
