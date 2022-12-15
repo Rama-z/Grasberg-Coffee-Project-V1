@@ -1,7 +1,6 @@
 require("dotenv").config();
 const { MAIL_EMAIL, MAIL_PASSWORD } = process.env;
-console.log(MAIL_EMAIL);
-console.log(MAIL_PASSWORD);
+console.log(process.env.LINK_DEPLOYMENT);
 
 const MAIL_SETTINGS = {
   service: "gmail",
