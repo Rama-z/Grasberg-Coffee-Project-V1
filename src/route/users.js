@@ -4,7 +4,8 @@ const isLogin = require("../middleware/isLogin");
 const allowedRole = require("../middleware/allowedRole");
 const imageUpload = require("../middleware/upload");
 const usersController = require("../controller/users");
-
+const cloud = require("../middleware/cloudinary");
+const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
 // Buat router
 const usersRouter = express.Router();
 
@@ -37,7 +38,8 @@ usersRouter.patch(
   "/editProfile",
   isLogin(),
   allowedRole("user", "admin"),
-  imageUpload.single("image"),
+  memoryStorageUploadProfile,
+  cloud.uploaderProfile,
   usersController.update
 );
 

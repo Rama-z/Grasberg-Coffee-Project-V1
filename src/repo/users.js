@@ -3,7 +3,7 @@ const database = require("../config/postgre");
 
 const getUser = (queryParams) => {
   return new Promise((resolve, reject) => {
-    const query = `select id, roles, username, email, gender, phone, adress, image, birthday from users where lower(username) like lower('%${queryParams.username}%') and lower(roles) like lower('user')`;
+    const query = `select id, roles, username, email, gender, phone, address, image, birthday from users where lower(username) like lower('%${queryParams.username}%') and lower(roles) like lower('user')`;
     const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
@@ -94,12 +94,12 @@ const update = (body, id, file) => {
     let query = "update users set ";
     let imageUrl = "";
     if (file) {
-      imageUrl = `${file.filename}`;
+      imageUrl = `${file.secure_url}`;
       if (Object.keys(body).length > 0) {
         query += ` image = '${imageUrl}', `;
       }
       if (Object.keys(body).length === 0) {
-        query += ` image = '${imageUrl}', where id = $1 returning id, username, email, phone, gender, adress, birthday `;
+        query += ` image = '${imageUrl}', where id = $1 returning id, username, email, phone, gender, address, birthday, image `;
         values.push(id);
       }
     }
@@ -107,7 +107,7 @@ const update = (body, id, file) => {
       if (index === array.length - 1) {
         query += ` ${key} = $${index + 1} where id = $${
           index + 2
-        } returning id, username, email, phone, gender, adress, birthday`;
+        } returning id, username, email, phone, gender, address, birthday, image`;
         values.push(body[key], id);
         return;
       }
@@ -116,6 +116,7 @@ const update = (body, id, file) => {
     });
     database.query(query, values, (err, result) => {
       if (err) {
+        console.log(err);
         return reject({ status: 500, message: "Internal Server Error", err });
       }
       let data = {};
