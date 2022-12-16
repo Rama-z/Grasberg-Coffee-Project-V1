@@ -20,7 +20,7 @@ const getUser = (queryParams) => {
 const getUserById = (id) => {
   return new Promise((resolve, reject) => {
     const query =
-      "select username, firstname, lastname, username, gender, birthday, adress, image, phone, email from users where id = $1";
+      "select username, firstname, lastname, username, gender, birthday, address, image, phone, email from users where id = $1";
     database.query(query, [id], (err, result) => {
       if (err) {
         return reject({ status: 500, message: "Internal Server Error", err });
