@@ -12,6 +12,7 @@ module.exports = {
       if (filter === "coffee") sqlFilter = "only coffee";
       if (filter === "nonCoffee") sqlFilter = "non coffee";
       if (filter === "food") sqlFilter = "food";
+      if (filter === "beverage") sqlFilter = "coffee";
       let sqlSort = "";
       if (sort === "popular") sqlSort = "order by count(t.product_id) desc";
       if (sort === "oldest") sqlSort = "order by p.created_at asc";
@@ -57,6 +58,7 @@ module.exports = {
           prev,
           next,
         };
+        console.log(query);
         database.query(query, (err, result) => {
           if (err) {
             console.log(err);
