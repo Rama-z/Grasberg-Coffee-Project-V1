@@ -4,9 +4,10 @@ const database = require("../config/postgre");
 module.exports = {
   getProduct: (params, api) => {
     return new Promise((resolve, reject) => {
-      const { search, sort, filter, page, limit } = params;
+      const { search, sort, filter, page, limit, promo } = params;
       let sqlSearch = !search || search === "" ? "" : search;
       let sqlLimit = !limit || limit === "" ? 5 : limit;
+      let sqlPromo = !promo || promo === "" ? 0 : 999;
       let sqlFilter = "";
       if (filter === "coffee") sqlFilter = "only coffee";
       if (filter === "nonCoffee") sqlFilter = "non coffee";
@@ -19,19 +20,21 @@ module.exports = {
       if (sort === "priciest") sqlSort = "order by p.price desc";
       let offset =
         !page || page === "1" ? 0 : (parseInt(page) - 1) * parseInt(sqlLimit);
-      let query = `select p.id, p.menu, c.category_name, p.price, p.image, p.description from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') group by p.id, c.category_name ${sqlSort} limit ${sqlLimit} offset ${offset}`;
-      let countQuery = `select count(distinct p.id) as count from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') ${sqlSort}`;
+      let query = `select p.id, p.menu, c.category_name, p.price, p.image, p2.discount, p.description from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id join promos p2 on p2.id = p.promo_id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') and p.promo_id != ${sqlPromo} group by p.id, c.category_name, p2.discount ${sqlSort} limit ${sqlLimit} offset ${offset}`;
+      let countQuery = `select count(distinct p.id) as count from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id join promos p2 on p2.id = p.promo_id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') and p.promo_id != ${sqlPromo} ${sqlSort}`;
       let link = `${api}/api/v1/products?`;
       if (search) link + `search=${search}`;
       if (sort) link + `sort=${sort}`;
       if (filter) link + `filter=${filter}`;
       database.query(countQuery, (err, result) => {
-        if (err)
+        if (err) {
+          console.log(err);
           return reject({
             status: 501,
-            message: "Internal Server Error",
+            message: "Internal Server Errorr",
             err,
           });
+        }
         const totalData = result.rows[0].count;
         const currentPage = page ? parseInt(page) : 1;
         const totalPage =
@@ -56,8 +59,9 @@ module.exports = {
         };
         database.query(query, (err, result) => {
           if (err) {
+            console.log(err);
             return reject({
-              status: 501,
+              status: 502,
               message: "Internal Server Error",
               err,
             });
