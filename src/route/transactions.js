@@ -12,12 +12,19 @@ const {
   create,
   edit,
   history,
+  getHistory,
   drop,
 } = require("../controller/transactions");
 
 // buat router
 const transactionsRouter = express.Router();
 
+transactionsRouter.get(
+  "/",
+  isLogin(),
+  allowedRole("user", "admin"),
+  getHistory
+);
 transactionsRouter.get("/sort/", isLogin(), allowedRole("admin"), sort);
 transactionsRouter.get(
   "/history/",

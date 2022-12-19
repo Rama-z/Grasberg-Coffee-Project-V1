@@ -62,8 +62,7 @@ module.exports = {
     try {
       const response = await repoTransaction.create(
         req.body,
-        req.userPayload.user_id,
-        req.file
+        req.userPayload.user_id
       );
       return sendResponse.success(res, response.status, response);
     } catch (err) {
@@ -85,6 +84,19 @@ module.exports = {
   drop: async (req, res) => {
     try {
       const response = await repoTransaction.drop(req.params.id);
+      return sendResponse.success(res, response.status, response);
+    } catch (err) {
+      return sendResponse.error(res, err.status || 500, err);
+    }
+  },
+  getHistory: async (req, res) => {
+    try {
+      const api = `${req.protocol}://${req.get("HOST")}`;
+      const response = await repoTransaction.getHistory(
+        req.query,
+        req.userPayload.user_id,
+        api
+      );
       return sendResponse.success(res, response.status, response);
     } catch (err) {
       return sendResponse.error(res, err.status || 500, err);

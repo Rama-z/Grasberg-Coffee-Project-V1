@@ -1,24 +1,21 @@
 const database = require("../config/postgre");
 
-const create = (body, token, file) => {
+const create = (body, id) => {
   return new Promise((resolve, reject) => {
     let query =
-      "insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status) values ($1, $2, $3, $4, $5, $6, 'pending') returning *";
-    const { product_id, delivery_adress, promo_id, total, payment_id } = body;
+      "insert into transactions (product_id, delivery_address, promo_id, total, user_id, payment_id, status) values ($1, $2, $3, $4, $5, $6, 'pending') returning *";
+    const { product_id, delivery_address, promo_id, total, payment_id } = body;
     let value = [
       product_id,
-      delivery_adress,
+      delivery_address,
       promo_id ? promo_id : 99,
       total,
-      token,
+      id,
       payment_id ? payment_id : 1,
     ];
-    if (file) {
-      query = `insert into transactions (product_id, delivery_adress, promo_id, total, user_id, payment_id, status, image) values ($1, $2, $3, $4, $5, $6, 'pending', $7) returning *`;
-      value.push(`${file.secure_url}`);
-    }
     database.query(query, value, (err, result) => {
       if (err) {
+        console.log(err);
         if (!product_id)
           return reject({
             status: 404,
@@ -195,13 +192,13 @@ const paginasi = (queryParams) => {
   });
 };
 
-const history = (queryparams, token) => {
+const history = (queryparams, id) => {
   return new Promise((resolve, reject) => {
     let query =
       "select u.email, p.menu, t.total, t.status, p.image from transactions t inner join users u on u.id = t.user_id inner join products p on p.id = t.product_id where u.id = $1";
     let queryLimit = "";
     let link = `http://localhost:8080/api/v1/transactions/history?`;
-    let values = [token];
+    let values = [id];
     if (queryparams.page && queryparams.limit) {
       let page = parseInt(queryparams.page);
       let limit = parseInt(queryparams.limit);
@@ -211,7 +208,7 @@ const history = (queryparams, token) => {
     } else {
       queryLimit = query;
     }
-    database.query(query, [token], (err, result) => {
+    database.query(query, [id], (err, result) => {
       if (err) {
         return reject({
           status: 500,
@@ -308,12 +305,84 @@ const drop = (queryParams) => {
   });
 };
 
+const getHistory = (params, userId, api) => {
+  return new Promise((resolve, reject) => {
+    const { sort, page, limit } = params;
+    let sqlLimit = !limit || limit === "" ? 5 : limit;
+    let sqlSort = "";
+    if (sort === "oldest") sqlSort = "order by p.created_at asc";
+    if (sort === "newest") sqlSort = "order by p.created_at desc";
+    if (sort === "cheapest") sqlSort = "order by t.total asc";
+    if (sort === "priciest") sqlSort = "order by t.total desc";
+    let offset =
+      !page || page === "1" ? 0 : (parseInt(page) - 1) * parseInt(sqlLimit);
+    let query = `select t.id, t.product_id, p.menu, t.delivery_address, t.user_id, t.payment_id, t.total, t.status, p.image from transactions t join products p on p.id = t.product_id where t.user_id = ${userId} ${sqlSort} limit ${sqlLimit} offset ${offset}`;
+    let countQuery = `select count(t.id) as count from transactions t join products p on p.id = t.product_id where t.user_id = ${userId}`;
+    let link = `${api}/api/v1/transactions?`;
+    if (sort) link + `sort=${sort}`;
+    database.query(countQuery, (err, result) => {
+      if (err) {
+        console.log(err);
+        return reject({
+          status: 501,
+          message: "Internal Server Error",
+          err,
+        });
+      }
+      const totalData = result.rows[0].count;
+      const currentPage = page ? parseInt(page) : 1;
+      const totalPage =
+        parseInt(sqlLimit) > totalData
+          ? 1
+          : Math.ceil(totalData / parseInt(sqlLimit));
+      const prev =
+        currentPage === 1
+          ? null
+          : link + `page=${currentPage - 1}&limit=${parseInt(sqlLimit)}`;
+      const next =
+        currentPage === totalPage
+          ? null
+          : link + `page=${currentPage + 1}&limit=${parseInt(sqlLimit)}`;
+      const meta = {
+        page: currentPage,
+        totalPage,
+        limit: parseInt(sqlLimit),
+        totalData: parseInt(totalData),
+        prev,
+        next,
+      };
+      database.query(query, (err, result) => {
+        if (err) {
+          console.log(err);
+          return reject({
+            status: 502,
+            message: "Internal Server Error",
+            err,
+          });
+        }
+        if (result.rows.length === 0)
+          return reject({
+            status: 404,
+            message: "Data Not Found",
+            err,
+          });
+        return resolve({
+          status: 200,
+          message: "List Product",
+          data: result.rows,
+          meta,
+        });
+      });
+    });
+  });
+};
 const repoTrans = {
   create,
   editTrans,
   paginasi,
   paginasi2,
   history,
+  getHistory,
   drop,
 };
 
