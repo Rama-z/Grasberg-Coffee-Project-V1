@@ -195,7 +195,7 @@ const paginasi = (queryParams) => {
 const history = (queryparams, id) => {
   return new Promise((resolve, reject) => {
     let query =
-      "select u.email, p.menu, t.total, t.status, p.image from transactions t inner join users u on u.id = t.user_id inner join products p on p.id = t.product_id where u.id = $1";
+      "select u.email, p.menu, t.total, t.status, p.image from transactions t inner join users u on u.id = t.user_id inner join products p on p.id = t.product_id where u.id = $1 and";
     let queryLimit = "";
     let link = `http://localhost:8080/api/v1/transactions/history?`;
     let values = [id];
@@ -316,8 +316,8 @@ const getHistory = (params, userId, api) => {
     if (sort === "priciest") sqlSort = "order by t.total desc";
     let offset =
       !page || page === "1" ? 0 : (parseInt(page) - 1) * parseInt(sqlLimit);
-    let query = `select t.id, t.product_id, p.menu, t.delivery_address, t.user_id, t.payment_id, t.total, t.status, p.image from transactions t join products p on p.id = t.product_id where t.user_id = ${userId} ${sqlSort} limit ${sqlLimit} offset ${offset}`;
-    let countQuery = `select count(t.id) as count from transactions t join products p on p.id = t.product_id where t.user_id = ${userId}`;
+    let query = `select t.id, t.product_id, p.menu, t.delivery_address, t.user_id, t.payment_id, t.total, t.status, p.image from transactions t join products p on p.id = t.product_id where deleted_at is null and t.user_id = ${userId} ${sqlSort} limit ${sqlLimit} offset ${offset}`;
+    let countQuery = `select count(t.id) as count from transactions t join products p on p.id = t.product_id where deleted_at is null and t.user_id = ${userId}`;
     let link = `${api}/api/v1/transactions?`;
     if (sort) link + `sort=${sort}`;
     database.query(countQuery, (err, result) => {
