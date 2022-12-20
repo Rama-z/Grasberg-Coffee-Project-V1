@@ -170,6 +170,8 @@ module.exports = {
         query += `${keys} = $${idx + 1}, `;
         value.push(body[keys]);
       });
+      console.log(query);
+      console.log(value);
       database
         .query(query, value)
         .then((response) => {
