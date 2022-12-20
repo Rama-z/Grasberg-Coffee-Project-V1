@@ -4,8 +4,8 @@ const isLogin = require("../middleware/isLogin");
 const allowedRole = require("../middleware/allowedRole");
 const imageUpload = require("../middleware/upload");
 const app = express();
-const cloud = require("../middleware/cloudinary");
 const { uploaderProfile } = require("../middleware/cloudinaryProduct");
+const cloud = require("../middleware/cloudinary");
 const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
 // const skipImage = require("../middleware/skipImage");
 

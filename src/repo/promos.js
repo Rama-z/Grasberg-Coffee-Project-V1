@@ -100,18 +100,20 @@ const create = (body, file) => {
     let value = [codes, discount, valid_date, menu_id];
     if (file) {
       if (Object.keys(body).length === 0) {
-        query = `insert into promos (codes, discount, valid_date, menu_id, image) values ('unset', 99, 99, 'default', $1) returning id`;
+        query = `insert into promos (codes, discount, valid_date, menu_id, image) values ('unset', 99, 99, 'default', $1) returning *`;
         value = [`${file.filename}`];
       }
       if (Object.keys(body).length > 0) {
-        query = `insert into promos (codes, discount, valid_date, menu_id, image) values ($1, $2, $3, $4, $5) returning id, codes, valid_date, image`;
+        query = `insert into promos (codes, discount, valid_date, menu_id, image) values ($1, $2, $3, $4, $5) returning *`;
         value.push(`${file.filename}`);
       }
     }
     database.query(query, value, (err, result) => {
       if (err) {
+        console.log(err);
         return reject({ status: 500, message: "Internal server error", err });
       }
+      console.log(result);
       return resolve({
         status: 200,
         data: result.rows[0],

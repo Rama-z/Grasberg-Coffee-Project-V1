@@ -85,10 +85,38 @@ const uploaderProfile = async (req, res, next) => {
   }
 };
 
+const uploaderPromo = async (req, res, next) => {
+  const { body, file } = req;
+  if (!file) return next();
+  const parser = new DatauriParser();
+  const buffer = file.buffer;
+  const ext = path.extname(file.originalname).toString();
+  const datauri = parser.format(ext, buffer);
+  const filename = `${body.codes.replace(" ", "_")}_${body.menu_id}`;
+  const cloudinaryOpt = {
+    public_id: filename,
+    folder: "Grasberg",
+  };
+  try {
+    const result = await cloudinary.uploader.upload(
+      datauri.content,
+      cloudinaryOpt
+    );
+    req.file = result;
+    next();
+  } catch {
+    res.status(err).json({
+      msg: err,
+      msg2: "Internal Server Error Middleware Cloudinary",
+    });
+  }
+};
+
 const cloud = {
   uploader,
   uploaderTrans,
   uploaderProfile,
+  uploaderPromo,
 };
 
 module.exports = cloud;

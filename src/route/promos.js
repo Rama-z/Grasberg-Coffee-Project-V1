@@ -4,6 +4,8 @@ const isLogin = require("../middleware/isLogin");
 const allowedRole = require("../middleware/allowedRole");
 const imageUpload = require("../middleware/upload");
 const { search, create, edit, drop } = require("../controller/promos");
+const cloud = require("../middleware/cloudinary");
+const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
 
 // buat router
 const promosRouter = express.Router();
@@ -13,7 +15,8 @@ promosRouter.post(
   "/",
   isLogin(),
   allowedRole("admin"),
-  imageUpload.single("image"),
+  memoryStorageUploadProfile,
+  cloud.uploaderPromo,
   create
 );
 

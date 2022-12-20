@@ -130,6 +130,7 @@ module.exports = {
       }
       database.query(query, value, (err, result) => {
         if (err) {
+          console.log(err);
           return reject({
             status: 500,
             message: "Internal message error",
