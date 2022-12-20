@@ -115,16 +115,16 @@ module.exports = {
   create: (body, file) => {
     return new Promise((resolve, reject) => {
       let query =
-        "insert into products (menu, price, varian_id, description) values ($1, $2, $3, $4) returning *";
-      const { menu, price, varian_id, description } = body;
-      let value = [menu, price, varian_id, description];
+        "insert into products (menu, price, varian_id, description, promo_id) values ($1, $2, $3, $4, $5) returning *";
+      const { menu, price, varian_id, description, promo_id } = body;
+      let value = [menu, price, varian_id, description, promo_id];
       if (file) {
         if (Object.keys(body).length === 0) {
-          query = `insert into products (menu, price, varian_id, description, image) values ('unset', 99, 99, 'default', $1) returning *`;
+          query = `insert into products (menu, price, varian_id, description, promo_id, image) values ('unset', 99, 99, 'default', 999, $1) returning *`;
           value = [`${file.secure_url}`];
         }
         if (Object.keys(body).length > 0) {
-          query = `insert into products (menu, price, varian_id, description, image) values ($1, $2, $3, $4, $5) returning *`;
+          query = `insert into products (menu, price, varian_id, description, promo_id, image) values ($1, $2, $3, $4, $5, $6) returning *`;
           value.push(`${file.secure_url}`);
         }
       }
@@ -170,8 +170,6 @@ module.exports = {
         query += `${keys} = $${idx + 1}, `;
         value.push(body[keys]);
       });
-      console.log(query);
-      console.log(value);
       database
         .query(query, value)
         .then((response) => {
