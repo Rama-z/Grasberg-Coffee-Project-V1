@@ -321,8 +321,8 @@ const getHistory = (params, userId, api) => {
     if (sort === "priciest") sqlSort = "order by t.total desc";
     let offset =
       !page || page === "1" ? 0 : (parseInt(page) - 1) * parseInt(sqlLimit);
-    let query = `select t.id, t.product_id, p.menu, t.delivery_address, t.user_id, t.payment_id, t.total, t.status, p.image from transactions t join products p on p.id = t.product_id where deleted_at is null and t.user_id = ${userId} ${sqlSort} limit ${sqlLimit} offset ${offset}`;
-    let countQuery = `select count(t.id) as count from transactions t join products p on p.id = t.product_id where deleted_at is null and t.user_id = ${userId}`;
+    let query = `select t.id, t.product_id, p.menu, t.delivery_address, t.user_id, t.payment_id, t.total, t.status, p.image, p2.codes from transactions t join products p on p.id = t.product_id join promos p2 on p2.id = p.promo_id where deleted_at is null and t.user_id = ${userId} ${sqlSort} limit ${sqlLimit} offset ${offset}`;
+    let countQuery = `select count(t.id) as count from transactions t join products p on p.id = t.product_id join promos p2 on p2.id = p.promo_id where deleted_at is null and t.user_id = ${userId}`;
     let link = `${api}/api/v1/transactions?`;
     if (sort) link + `sort=${sort}`;
     database.query(countQuery, (err, result) => {
