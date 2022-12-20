@@ -48,7 +48,14 @@ productsRouter.post(
 
 // agar dinamis menggunakan :id
 
-productsRouter.patch("/image/:id", imageUpload.single("image"), editProduct);
+productsRouter.patch(
+  "/image/:id",
+  isLogin(),
+  allowedRole("admin"),
+  memoryStorageUploadProfile,
+  cloud.uploader,
+  editProduct
+);
 
 productsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
 

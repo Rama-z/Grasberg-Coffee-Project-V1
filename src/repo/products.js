@@ -150,12 +150,12 @@ module.exports = {
       const value = [];
       if (file) {
         if (Object.keys(body).length === 0) {
-          const imageUrl = `${file.filename}`;
+          const imageUrl = `${file.secure_url}`;
           query += `image = '${imageUrl}' where id = $1 returning menu, price, varian_id, image`;
           value.push(params.id);
         }
         if (Object.keys(body).length > 0) {
-          const imageUrl = `${file.filename}`;
+          const imageUrl = `${file.secure_url}`;
           query += `image = '${imageUrl}', `;
         }
       }
@@ -177,7 +177,6 @@ module.exports = {
             return reject({
               status: 404,
               message: "Product not found, can't update product",
-              err,
             });
           }
           resolve({
@@ -194,11 +193,12 @@ module.exports = {
                   : response.rows[0].varian_id === 3
                   ? "Foods"
                   : "",
-              image: file.filename,
+              image: file.secure_url,
             },
           });
         })
         .catch((err) => {
+          console.log(err);
           reject({
             status: 500,
             message: "Failed to edit product, Internal message error",

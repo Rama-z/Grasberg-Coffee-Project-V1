@@ -90,42 +90,54 @@ const editPassword = (body, token) => {
 
 const update = (body, id, file) => {
   return new Promise((resolve, reject) => {
-    const values = [];
-    let query = "update users set ";
-    let imageUrl = "";
-    if (file) {
-      imageUrl = `${file.secure_url}`;
-      if (Object.keys(body).length > 0) {
-        query += ` image = '${imageUrl}', `;
-      }
-      if (Object.keys(body).length === 0) {
-        query += ` image = '${imageUrl}', where id = $1 returning id, username, email, phone, gender, address, birthday, image `;
-        values.push(id);
-      }
-    }
-    Object.keys(body).forEach((key, index, array) => {
-      if (index === array.length - 1) {
-        query += ` ${key} = $${index + 1} where id = $${
-          index + 2
-        } returning id, username, email, phone, gender, address, birthday, image`;
-        values.push(body[key], id);
-        return;
-      }
-      query += ` ${key} = $${index + 1}, `;
-      values.push(body[key]);
-    });
-    database.query(query, values, (err, result) => {
-      if (err) {
+    const { username, firstname, lastname, email, gender, address, phone } =
+      body;
+    const queryUser = `select * from users where id = ${id}`;
+    database.query(queryUser, (errUser, resultUser) => {
+      if (errUser) {
         console.log(err);
-        return reject({ status: 500, message: "Internal Server Error", err });
+        return reject({
+          status: 501,
+          msg: "internal server error",
+        });
       }
-      let data = {};
-      if (file) data = { Image: imageUrl, ...result.rows[0] };
-      data = { ...result.rows[0] };
-      return resolve({
-        status: 200,
-        message: `${result.rows[0].username}, your profile successfully updated`,
-        data,
+      const values = [];
+      let query = "update users set ";
+      let imageUrl = "";
+      if (file) {
+        imageUrl = `${file.secure_url}`;
+        if (Object.keys(body).length > 0) {
+          query += ` image = '${imageUrl}', `;
+        }
+        if (Object.keys(body).length === 0) {
+          query += ` image = '${imageUrl}', where id = $1 returning id, username, email, phone, gender, address, birthday, image `;
+          values.push(id);
+        }
+      }
+      Object.keys(body).forEach((key, index, array) => {
+        if (index === array.length - 1) {
+          query += ` ${key} = $${index + 1} where id = $${
+            index + 2
+          } returning id, username, email, phone, gender, address, birthday, image`;
+          values.push(body[key], id);
+          return;
+        }
+        query += ` ${key} = $${index + 1}, `;
+        values.push(body[key]);
+      });
+      database.query(query, values, (err, result) => {
+        if (err) {
+          console.log(err);
+          return reject({ status: 500, message: "Internal Server Error", err });
+        }
+        let data = {};
+        if (file) data = { Image: imageUrl, ...result.rows[0] };
+        data = { ...result.rows[0] };
+        return resolve({
+          status: 200,
+          message: `${result.rows[0].username}, your profile successfully updated`,
+          data,
+        });
       });
     });
   });
