@@ -45,7 +45,10 @@ const create = (body, id) => {
 
 const editTrans = (body, params) => {
   return new Promise((resolve, reject) => {
+    const { deleted_at } = body;
     let query = "update transactions set ";
+    // if (deleted_at === "delete")
+    //   query = "update transactions set deleted_at = now(), ";
     const value = [];
     Object.keys(body).forEach((key, idx, array) => {
       if (idx === array.length - 1) {
@@ -56,6 +59,7 @@ const editTrans = (body, params) => {
       query += `${key} = $${idx + 1}, `;
       value.push(body[key]);
     });
+    console.log(query);
     database
       .query(query, value)
       .then((response) => {
@@ -72,6 +76,7 @@ const editTrans = (body, params) => {
         });
       })
       .catch((err) => {
+        console.log(err);
         reject({
           status: 500,
           message: "internal Server Error",
