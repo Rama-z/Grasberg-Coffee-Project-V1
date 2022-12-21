@@ -109,6 +109,7 @@ module.exports = {
             image: result.rows[0].image,
             category_name: result.rows[0].category_name,
             description: result.rows[0].description,
+            discount: result.rows[0].discount,
           },
         });
       });
