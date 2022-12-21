@@ -87,9 +87,11 @@ module.exports = {
   getProductById: (id) => {
     return new Promise((resolve, reject) => {
       const query =
-        "select p.id, p.menu, p.price, p.image, c.category_name, p.description, p2.discount from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id join promos p2 on p2.id = p.promo_id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name , description";
+        "select p.id, p.menu, p.price, p.image, c.category_name, p.description, p2.discount from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id join promos p2 on p2.id = p.promo_id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name, p.description, p2.discount";
+      console.log(query);
       database.query(query, [id], (err, result) => {
         if (err) {
+          console.log(err);
           return reject({
             status: 500,
             message: "Internal message error",
