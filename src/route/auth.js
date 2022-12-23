@@ -2,7 +2,7 @@ const authRouter = require("express").Router();
 const authController = require("../controller/auth");
 const isLogin = require("../middleware/isLogin");
 // login
-authRouter.post("/", authController.login);
+authRouter.post("/login", authController.login);
 authRouter.post("/register/", authController.register);
 authRouter.delete("/logout", isLogin(), authController.logout);
 
