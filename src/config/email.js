@@ -1,6 +1,5 @@
 require("dotenv").config();
 const { MAIL_EMAIL, MAIL_PASSWORD } = process.env;
-console.log(process.env.LINK_DEPLOYMENT);
 
 const MAIL_SETTINGS = {
   service: "gmail",
@@ -15,6 +14,7 @@ const transporter = nodemailer.createTransport(MAIL_SETTINGS);
 
 module.exports.sendMails = async (params) => {
   try {
+    console.log(process.env.LINK_DEPLOYMENT);
     let info = await transporter.sendMail({
       from: MAIL_SETTINGS.auth.user,
       to: params.to,
@@ -26,7 +26,7 @@ module.exports.sendMails = async (params) => {
         >
           <h2>Hi.</h2>
           <h4>This Is Your Link Verification</h4>
-          <p style="margin-bottom: 30px;">Please click <a href="${process.env.LINK_DEPLOYMENT}${params.OTP}">here</a> to verif your email</p>
+          <p style="margin-bottom: 30px;">Please click <a href="${process.env.LINK_DEPLOYMENT}${params.OTP}" target="_blank">here</a> to verif your email</p>
       </div>
       `,
     });

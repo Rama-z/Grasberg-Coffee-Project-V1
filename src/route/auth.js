@@ -4,6 +4,8 @@ const isLogin = require("../middleware/isLogin");
 // login
 authRouter.post("/login", authController.login);
 authRouter.post("/register/", authController.register);
+authRouter.patch("/edit-password");
+authRouter.patch("/forgot-password");
 authRouter.delete("/logout", isLogin(), authController.logout);
 
 // authRouter.post("/logout/", verifyToken, (req, res) => {

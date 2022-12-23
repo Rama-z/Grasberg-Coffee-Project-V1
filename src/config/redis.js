@@ -1,24 +1,24 @@
 const redis = require("redis");
 
-const Client = redis.createClient({
+const client = redis.createClient({
   url: process.env.REDIS_URL,
   username: process.env.REDIS_USER,
   password: process.env.REDIS_PASSWORD,
 });
 
-Client.on("connect", () => console.log("redis connected"));
+client.on("connect", () => console.log("redis connected"));
 
-Client.on("ready", () => console.log("redis ready to use"));
+client.on("ready", () => console.log("redis ready to use"));
 
-Client.on("error", (err) => console.log(err.message));
+client.on("error", (err) => console.log(err.message));
 
-Client.on("end", () => {
+client.on("end", () => {
   console.log("Client disconnected from redis");
 });
 
 process.on("SIGINT", () => {
-  Client.quit();
+  client.quit();
 });
 
-Client.connect().then();
-module.exports = Client;
+client.connect().then();
+module.exports = client;

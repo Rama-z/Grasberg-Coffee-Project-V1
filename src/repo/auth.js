@@ -122,6 +122,7 @@ module.exports = {
           name: email,
         }).then((result) => {
           client.get(OTP).then((results) => {
+            console.log(results);
             if (results)
               return resolve(console.log("sukses kirim kode ke email"));
             const data = {
@@ -129,8 +130,10 @@ module.exports = {
               password: pass,
             };
             client.set(OTP, JSON.stringify(data)).then(() => {
+              console.log(OTP);
               bcrypt.hash(pass, 10, (err, hashedPwd) => {
                 if (err) {
+                  console.log(err);
                   return reject({
                     status: 502,
                     message: "internal server error",
@@ -153,6 +156,7 @@ module.exports = {
                   ],
                   (err, result) => {
                     if (err) {
+                      console.log(err);
                       return reject({
                         status: 501,
                         message: `Internal Server Error`,
