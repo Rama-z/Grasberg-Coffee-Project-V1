@@ -33,6 +33,7 @@ mainRouter.get("/", (req, res) => {
 });
 
 mainRouter.get("/verify/:id", function (req, res) {
+  console.log(process.env.LINK_DEPLOYMENT_HOME);
   client
     .get(req.params.id)
     .then((results) => {
