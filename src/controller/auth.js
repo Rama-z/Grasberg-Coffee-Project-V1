@@ -24,6 +24,22 @@ module.exports = {
       return sendResponse.error(res, err.status || 500, err);
     }
   },
+  forgot: async (req, res) => {
+    try {
+      const response = await authRepo.forgot(req.body);
+      return sendResponse.success(res, response.status, response);
+    } catch (err) {
+      return sendResponse.error(res, err.status || 500, err);
+    }
+  },
+  confirm: async (req, res) => {
+    try {
+      const response = await authRepo.confirm(req.body);
+      return sendResponse.success(res, response.status, response);
+    } catch (err) {
+      return sendResponse.error(res, err.status || 500, err);
+    }
+  },
   logout: async (req, res) => {
     try {
       const response = await authRepo.logout(req.userPayload);

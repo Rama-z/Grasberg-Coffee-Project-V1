@@ -68,7 +68,7 @@ mainRouter.get("/verify/:id", function (req, res) {
             </div>
             <div>
               <p style="font-weight:800;font-size:25px;font-family:Consolas">Your Email Was Successfully verified</p>
-              <p style="font-weight:800;font-size:25px;font-family:Consolas">You can login <a href="$${process.env.LINK_DEPLOYMENT_HOME}auth/login">here</a> </p>
+              <p style="font-weight:800;font-size:25px;font-family:Consolas">You can login <a href="$${process.env.LINK_DEPLOYMENT_HOME}auth/login" target="_blank">here</a> </p>
             </div>
           </div>
           `);

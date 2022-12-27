@@ -4,7 +4,7 @@ const JWTR = require("jwt-redis").default;
 const database = require("../config/postgre");
 const client = require("../config/redis");
 const jwtr = new JWTR(client);
-const { sendMails } = require("../config/email.js");
+const { sendMails, sendForgot } = require("../config/email.js");
 
 module.exports = {
   login: (body) => {
@@ -177,7 +177,94 @@ module.exports = {
       });
     });
   },
-
+  forgot: (body) => {
+    return new Promise((resolve, reject) => {
+      console.log("forgot");
+      const { email, directLink } = body;
+      console.log(email);
+      console.log(directLink);
+      const emailValidation = "select users from users where email = $1";
+      database.query(emailValidation, [email], (err, emailResult) => {
+        if (err) {
+          console.log(err);
+          return reject({
+            status: 500,
+            message: "Internal Server Error",
+            err,
+          });
+        }
+        if (emailResult === 0) {
+          return reject({
+            status: 404,
+            message: "Email not found",
+          });
+        }
+        const digits = "0123456789";
+        let OTP = "";
+        for (i = 0; i < 6; i++) {
+          OTP += digits[Math.floor(Math.random() * 10)];
+        }
+        sendForgot({
+          to: email,
+          OTP: OTP,
+          link: `${directLink}/${OTP}`,
+        }).then((result) => {
+          client
+            .set(OTP, email, {
+              EX: 120,
+              NX: true,
+            })
+            .then(() => {
+              return resolve({
+                status: 200,
+                message: "Please check your email",
+              });
+            });
+        });
+      });
+    });
+  },
+  confirm: (body) => {
+    return new Promise((resolve, reject) => {
+      const { pinCode, newPassword } = body;
+      client.get(pinCode).then((emailResult) => {
+        if (!emailResult) {
+          return reject({
+            status: 404,
+            message:
+              "Your pin code are invalid, repeat your forgot password step",
+          });
+        }
+        bcrypt.hash(newPassword, 10, (err, hashPassResult) => {
+          if (err) {
+            console.log(err);
+            return reject({
+              status: 501,
+              message: "Internal Server Error",
+              err,
+            });
+          }
+          const editPwQuery =
+            "update users set pass = $1, updated_at = now() where email = $2";
+          const editPwValues = [hashPassResult, emailResult];
+          database.query(editPwQuery, editPwValues, (err, editResult) => {
+            if (err) {
+              return reject({
+                status: 500,
+                message: "Internal server error",
+                err,
+              });
+            }
+            client.del(pinCode);
+            return resolve({
+              status: 200,
+              message: "Change password success",
+            });
+          });
+        });
+      });
+    });
+  },
   logout: (token) => {
     return new Promise((resolve, reject) => {
       jwtr.destroy(token.jti).then((res) => {
