@@ -179,24 +179,21 @@ module.exports = {
   },
   forgot: (body) => {
     return new Promise((resolve, reject) => {
-      console.log("forgot");
       const { email, directLink } = body;
-      console.log(email);
-      console.log(directLink);
       const emailValidation = "select users from users where email = $1";
       database.query(emailValidation, [email], (err, emailResult) => {
+        if (!emailResult.rows[0]) {
+          return reject({
+            status: 404,
+            message: "Email not found",
+          });
+        }
         if (err) {
           console.log(err);
           return reject({
             status: 500,
             message: "Internal Server Error",
             err,
-          });
-        }
-        if (emailResult === 0) {
-          return reject({
-            status: 404,
-            message: "Email not found",
           });
         }
         const digits = "0123456789";
