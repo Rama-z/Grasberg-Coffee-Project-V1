@@ -25,7 +25,18 @@ const getUserById = (id) => {
       if (err) {
         return reject({ status: 500, message: "Internal Server Error", err });
       }
-      return resolve({ status: 200, data: result.rows });
+      let data = {
+        username: result.rows[0].username,
+        firstname: result.rows[0].firstname,
+        lastname: result.rows[0].lastname,
+        gender: result.rows[0].gender,
+        birthday: result.rows[0].birthday,
+        address: result.rows[0].address,
+        image: result.rows[0].image,
+        phone: result.rows[0].phone,
+        email: result.rows[0].email,
+      };
+      return resolve({ status: 200, data });
     });
   });
 };
