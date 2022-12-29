@@ -28,7 +28,7 @@ module.exports = {
           if (response.rows.length === 0)
             return reject({
               status: 401,
-              message: "Email/Password is Wrong",
+              message: "Email are not registered yet",
               err,
             });
           if (response.rows[0].status === "unverified")
