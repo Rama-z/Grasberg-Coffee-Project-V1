@@ -129,7 +129,7 @@ const update = (body, id, file) => {
         if (index === array.length - 1) {
           query += ` ${key} = $${index + 1} where id = $${
             index + 2
-          } returning id, username, email, phone, gender, address, birthday, image`;
+          } returning id, username, firstname, lastname, email, phone, gender, address, birthday, image`;
           values.push(body[key], id);
           return;
         }
