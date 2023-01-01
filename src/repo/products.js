@@ -86,7 +86,7 @@ module.exports = {
   getProductById: (id) => {
     return new Promise((resolve, reject) => {
       const query =
-        "select p.id, p.menu, p.price, p.image, c.category_name, p.description, p.promo_id, p2.codes, p2.discount from products p join categorize c on c.id = p.varian_id left join transaction_item ti on ti.product_id = p.id join promos p2 on p2.id = p.promo_id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name, p.description, p2.discount";
+        "select p.id, p.menu, p.price, p.image, c.category_name, p.description, p.promo_id, p2.codes, p2.discount from products p join categorize c on c.id = p.varian_id left join transaction_item ti on ti.product_id = p.id join promos p2 on p2.id = p.promo_id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name, p2.codes, p.description, p2.discount";
       database.query(query, [id], (err, result) => {
         if (err) {
           console.log(err);
