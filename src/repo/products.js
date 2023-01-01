@@ -98,6 +98,7 @@ module.exports = {
         }
         if (result.rows === 0)
           return reject({ status: 404, message: "Product not found", err });
+        console.log(result.rows[0]);
         return resolve({
           status: 200,
           data: {
@@ -108,6 +109,8 @@ module.exports = {
             category_name: result.rows[0].category_name,
             description: result.rows[0].description,
             discount: result.rows[0].discount,
+            promo_id: result.rows[0].promo_id,
+            promo_codes: result.rows[0].codes,
           },
         });
       });
