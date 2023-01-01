@@ -21,8 +21,8 @@ module.exports = {
       if (sort === "priciest") sqlSort = "order by p.price desc";
       let offset =
         !page || page === "1" ? 0 : (parseInt(page) - 1) * parseInt(sqlLimit);
-      let query = `select p.id, p.menu, c.category_name, p.price, p.image, p2.discount, p.description from products p join categorize c on c.id = p.varian_id = p.id join promos p2 on p2.id = p.promo_id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') and p.promo_id != ${sqlPromo} group by p.id, c.category_name, p.created_at, p2.discount ${sqlSort} limit ${sqlLimit} offset ${offset}`;
-      let countQuery = `select count(distinct p.id) as count from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id join promos p2 on p2.id = p.promo_id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') and p.promo_id != ${sqlPromo}`;
+      let query = `select p.id, p.menu, c.category_name, p.price, p.image, p2.discount, p.description from products p join categorize c on c.id = p.varian_id join promos p2 on p2.id = p.promo_id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') and p.promo_id != ${sqlPromo} group by p.id, c.category_name, p.created_at, p2.discount ${sqlSort} limit ${sqlLimit} offset ${offset}`;
+      let countQuery = `select count(distinct p.id) as count from products p join categorize c on c.id = p.varian_id join promos p2 on p2.id = p.promo_id where lower(p.menu) like lower('%${sqlSearch}%') and lower(c.category_name) like lower('%${sqlFilter}%') and p.promo_id != ${sqlPromo}`;
       console.log(query);
       let link = `${api}/api/v1/products?`;
       if (search) link + `search=${search}`;
@@ -87,7 +87,7 @@ module.exports = {
   getProductById: (id) => {
     return new Promise((resolve, reject) => {
       const query =
-        "select p.id, p.menu, p.price, p.image, c.category_name, p.description, p2.discount from products p join categorize c on c.id = p.varian_id left join transactions t on t.product_id = p.id join promos p2 on p2.id = p.promo_id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name, p.description, p2.discount";
+        "select p.id, p.menu, p.price, p.image, c.category_name, p.description, p2.discount from products p join categorize c on c.id = p.varian_id join promos p2 on p2.id = p.promo_id where p.id = $1 group by p.id, menu, p.price , p.image, c.category_name, p.description, p2.discount";
       console.log(query);
       database.query(query, [id], (err, result) => {
         if (err) {
