@@ -27,8 +27,6 @@ const create = (body, id) => {
       delivery_method,
       delivery_times,
     ];
-    console.log(query);
-    console.log(value);
     database.query(query, value, (err, result) => {
       if (err) {
         console.log(err);
