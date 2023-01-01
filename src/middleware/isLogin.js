@@ -36,7 +36,7 @@ const isLogin = () => {
               .json({ msg: "Jwt Expired", data: null, err });
           return res
             .status(401)
-            .json({ msg: "You have to login firsta", data: null, err });
+            .json({ msg: "You have to login first", data: null, err });
         });
     });
   };

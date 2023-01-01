@@ -3,26 +3,23 @@ const database = require("../config/postgre");
 const create = (body, id) => {
   return new Promise((resolve, reject) => {
     let query =
-      "insert into transactions (product_id, delivery_address, promo_id, total, user_id, payment_id, status) values ($1, $2, $3, $4, $5, $6, 'pending') returning *";
-    const { product_id, delivery_address, promo_id, total, payment_id } = body;
+      "insert into transactions ( user_id, delivery_address, promo_id, payment_id, payment_method, total, status) values ($1, $2, $3, $4, $5, $6, 'pending') returning *";
+    const { delivery_address, promo_id, payment_method, total_price } = body;
+    const payment_id = `Grasberg-${Math.floor(
+      Math.random() * 100000000000000000000
+    )}`;
     let value = [
-      product_id,
-      delivery_address,
-      promo_id ? promo_id : 99,
-      total,
       id,
-      payment_id ? payment_id : 1,
+      delivery_address,
+      promo_id ? promo_id : 999,
+      payment_id,
+      payment_method,
+      total_price,
     ];
     database.query(query, value, (err, result) => {
       if (err) {
         console.log(err);
-        if (!product_id)
-          return reject({
-            status: 404,
-            message: "Input your product",
-            err,
-          });
-        if (!total)
+        if (!total_price)
           return reject({
             status: 404,
             message: "Input total amount of your purchasing",
@@ -41,6 +38,37 @@ const create = (body, id) => {
       });
     });
   });
+};
+
+const createItem = async (products, transactionId) => {
+  return await Promise.all(
+    products.map((product) => {
+      return new Promise((resolve, reject) => {
+        const promo_id = product.promo_id || 999;
+        let query =
+          "insert into transaction_item (transaction_id, product_id, size_id, quantity, promo_id, subtotal) values ($1, $2, $3, $4, $5, $6) returning *";
+        let values = [
+          transactionId,
+          product.product_id,
+          product.size_id,
+          product.quantity,
+          promo_id,
+          product.subtotal,
+        ];
+        database.query(query, values, (err, result) => {
+          if (err) {
+            console.log(err);
+            return reject({
+              status: 500,
+              message: "Internal Server Error",
+              err,
+            });
+          }
+          return resolve(result.rows[0]);
+        });
+      });
+    })
+  );
 };
 
 const editTrans = (body, params) => {
@@ -381,14 +409,46 @@ const getHistory = (params, userId, api) => {
     });
   });
 };
+
+const midTransHandler = (body) => {
+  return new Promise((resolve, reject) => {
+    const query =
+      "update transactions set status = 'paid' where id = $1 returning *";
+    const value = [body.transaction_id];
+    database.query(query, value, (err, result) => {
+      if (err) {
+        console.log(err);
+        return reject({
+          status: 500,
+          message: "Internal server Error",
+          err,
+        });
+      }
+      if (result.rows.length === 0) {
+        return reject({
+          status: 404,
+          message: "Data not found",
+          err,
+        });
+      }
+      return resolve({
+        status: 200,
+        message: "Payment success",
+        result,
+      });
+    });
+  });
+};
 const repoTrans = {
   create,
+  createItem,
   editTrans,
   paginasi,
   paginasi2,
   history,
   getHistory,
   drop,
+  midTransHandler,
 };
 
 module.exports = repoTrans;

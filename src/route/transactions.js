@@ -14,6 +14,7 @@ const {
   history,
   getHistory,
   drop,
+  midTransHandler,
 } = require("../controller/transactions");
 
 // buat router
@@ -42,8 +43,10 @@ transactionsRouter.post(
   create
 );
 
+transactionsRouter.patch("/midTransHandler", midTransHandler);
+
 transactionsRouter.patch(
-  "/:id",
+  "/edit/:id",
   isLogin(),
   allowedRole("admin"),
   memoryStorageUploadProfile,

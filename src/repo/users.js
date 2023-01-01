@@ -136,7 +136,7 @@ const update = (body, id, file) => {
         query += ` ${key} = $${index + 1}, `;
         values.push(body[key]);
       });
-      console.log(query);
+      console.log(file);
       database.query(query, values, (err, result) => {
         if (err) {
           console.log(err);

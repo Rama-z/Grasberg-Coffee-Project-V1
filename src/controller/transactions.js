@@ -1,13 +1,26 @@
 const repoTransaction = require("../repo/transactions");
 const sendResponse = require("../helper/response");
+const midTransClient = require("midtrans-client");
 
-const midtransClient = require("midtrans-client");
-
-let snap = new midtransClient.Snap({
+let coreApi = new midTransClient.CoreApi({
   isProduction: false,
   serverKey: process.env.SERVER_KEY_MIDTRANS,
   clientKey: process.env.CLIENT_KEY_MIDTRANS,
 });
+
+const paymentWithMidTrans = async (total_price, payment_id, bank) => {
+  const parameter = {
+    payment_type: "bank_transfer",
+    transaction_details: {
+      gross_amount: parseInt(total_price),
+      order_id: payment_id,
+    },
+    bank_transfer: {
+      bank: bank,
+    },
+  };
+  return await coreApi.charge(parameter);
+};
 
 module.exports = {
   sort: async (req, res) => {
@@ -64,9 +77,61 @@ module.exports = {
         req.body,
         req.userPayload.user_id
       );
-      return sendResponse.success(res, response.status, response);
+      const transaction_id = response.data.id;
+      const responseItem = await repoTransaction.createItem(
+        req.body.product_item,
+        transaction_id
+      );
+      let transaction_item = [];
+      responseItem.map((product) => {
+        console.log(product);
+        const promo_id = product.promo_id || 999;
+        const temp = {
+          transaction_id: transaction_id,
+          product_id: product.product_id,
+          size_id: product.size_id,
+          quantity: product.quantity,
+          promo_id: promo_id,
+          subtotal: product.subtotal,
+        };
+        transaction_item.push(temp);
+      });
+      const results = {
+        id: transaction_id,
+        user_id: req.userPayload.user_id,
+        transaction_item,
+        total_price: req.body.total_price,
+        delivery_address: req.body.delivery_address,
+        phone: req.body.phone,
+        promo_id: req.body.promo_id || 999,
+        payment_method: req.body.payment_method,
+        order_status: response.status,
+      };
+
+      const midTrans = await paymentWithMidTrans(
+        req.body.total_price,
+        response.data.payment_id,
+        req.body.payment_method
+      );
+
+      const result = {
+        data: {
+          results,
+          midTrans,
+        },
+      };
+      return sendResponse.success(res, response.status || 200, result);
     } catch (err) {
+      console.log(err);
       return sendResponse.error(res, err.status || 500, err);
+    }
+  },
+  midTransHandler: async (req, res) => {
+    try {
+      const response = await repoTransaction.midTransHandler(req.body);
+      sendResponse.success(res, response.status || 200, response);
+    } catch (err) {
+      sendResponse.error(res, err.status || 500, err);
     }
   },
   edit: async (req, res) => {

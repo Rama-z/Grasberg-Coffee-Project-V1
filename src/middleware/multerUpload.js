@@ -6,6 +6,7 @@ const memoryStorage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname);
+  console.log(ext);
   if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") {
     return cb({
       message: "Check your file type. Only .jpg, .jpeg, and .png are allowed",
