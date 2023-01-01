@@ -3,8 +3,17 @@ const database = require("../config/postgre");
 const create = (body, id) => {
   return new Promise((resolve, reject) => {
     let query =
-      "insert into transactions ( user_id, delivery_address, promo_id, payment_id, payment_method, total, status) values ($1, $2, $3, $4, $5, $6, 'pending') returning *";
-    const { delivery_address, promo_id, payment_method, total_price } = body;
+      "insert into transactions ( user_id, delivery_address, promo_id, payment_id, payment_method, total, status, delivery_method, delivery_time) values ($1, $2, $3, $4, $5, $6, 'pending', $7, $8) returning *";
+    const {
+      delivery_address,
+      promo_id,
+      payment_method,
+      total_price,
+      delivery_method,
+      delivery_time,
+    } = body;
+    let delivery_times = delivery_time;
+    if (delivery_time === "now") delivery_times = "now()";
     const payment_id = `Grasberg-${Math.floor(
       Math.random() * 100000000000000000000
     )}`;
@@ -15,7 +24,11 @@ const create = (body, id) => {
       payment_id,
       payment_method,
       total_price,
+      delivery_method,
+      delivery_times,
     ];
+    console.log(query);
+    console.log(value);
     database.query(query, value, (err, result) => {
       if (err) {
         console.log(err);
