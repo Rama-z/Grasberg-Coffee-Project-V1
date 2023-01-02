@@ -107,7 +107,7 @@ module.exports = {
         payment_method: req.body.payment_method,
         order_status: response.status,
       };
-
+      console.log("bank", req.body.payment_method);
       const midTrans = await paymentWithMidTrans(
         req.body.total_price,
         response.data.payment_id,

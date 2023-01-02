@@ -6,8 +6,6 @@ const imageUpload = require("../middleware/upload");
 const { search, create, edit, drop } = require("../controller/promos");
 const cloud = require("../middleware/cloudinary");
 const { memoryStorageUploadProfile } = require("../middleware/multerUpload");
-
-// buat router
 const promosRouter = express.Router();
 
 promosRouter.get("/", search);
@@ -24,7 +22,8 @@ promosRouter.patch(
   "/:id",
   isLogin(),
   allowedRole("admin"),
-  imageUpload.single("image"),
+  memoryStorageUploadProfile,
+  cloud.uploaderPromo,
   edit
 );
 promosRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);

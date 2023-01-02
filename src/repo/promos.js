@@ -2,16 +2,20 @@ const database = require("../config/postgre");
 
 const search = (queryParams) => {
   return new Promise((resolve, reject) => {
-    const { codes, menu } = queryParams;
-    const query =
-      "select p.codes, p.discount, p.valid_date, p2.menu, p2.price, p.image from promos p join products p2 on p.menu_id = p2.id where lower(p.codes) like lower($1) and lower(p2.menu) like lower($2)";
-    const value = [`%${codes}%`, `%${menu}%`];
+    const { codes } = queryParams;
+    let code = codes || "";
+    const query = `select * from promos p where lower(p.codes) like lower('%${code}%') and id != 999 and deleted_at is null order by id asc`;
+    const value = [];
     database.query(query, value, (err, result) => {
       if (err) {
+        console.log(err);
         return reject({ status: 500, message: "Internal server error", err });
       }
       return resolve({
         status: 200,
+        meta: {
+          length: result.rows.length,
+        },
         data: result.rows,
         message: "Promo success for being shown",
       });
@@ -95,16 +99,16 @@ const getAllPromo = (queryParams) => {
 const create = (body, file) => {
   return new Promise((resolve, reject) => {
     let query =
-      "insert into promos (codes, discount, valid_date, menu_id) values ($1, $2, $3, $4)";
-    const { codes, discount, valid_date, menu_id } = body;
-    let value = [codes, discount, valid_date, menu_id];
+      "insert into promos (codes, discount, valid_date) values ($1, $2, $3) returning *";
+    const { codes, discount, valid_date } = body;
+    let value = [codes, discount, valid_date];
     if (file) {
       if (Object.keys(body).length === 0) {
-        query = `insert into promos (codes, discount, valid_date, menu_id, image) values ('unset', 99, 99, 'default', $1) returning *`;
+        query = `insert into promos (codes, discount, valid_date, image) values ('unset', 99, 99, $1) returning *`;
         value = [`${file.secure_url}`];
       }
       if (Object.keys(body).length > 0) {
-        query = `insert into promos (codes, discount, valid_date, menu_id, image) values ($1, $2, $3, $4, $5) returning *`;
+        query = `insert into promos (codes, discount, valid_date, image) values ($1, $2, $3, $4) returning *`;
         value.push(`${file.secure_url}`);
       }
     }
@@ -113,7 +117,6 @@ const create = (body, file) => {
         console.log(err);
         return reject({ status: 500, message: "Internal server error", err });
       }
-      console.log(result);
       return resolve({
         status: 200,
         data: result.rows[0],
@@ -127,22 +130,28 @@ const edit = (body, params, file) => {
   return new Promise((resolve, reject) => {
     let query = "update promos set updated_at = CURRENT_TIMESTAMP, ";
     const value = [];
+    if (Object.keys(body).length === 0) {
+      if (!file) {
+        return reject({
+          status: 400,
+          message: "Edit product cancelled, no body for edit",
+        });
+      }
+    }
     if (file) {
       if (Object.keys(body).length === 0) {
-        const imageUrl = `${file.filename}`;
-        query += `image = '${imageUrl}' where id = $1 returning codes, discount, menu_id, valid_date, image, updated_at`;
+        const imageUrl = `${file.secure_url}`;
+        query += `image = '${imageUrl}' where id = $1 returning *`;
         value.push(params.id);
       }
       if (Object.keys(body).length > 0) {
-        const imageUrl = `${file.filename}`;
+        const imageUrl = `${file.secure_url}`;
         query += `image = '${imageUrl}', `;
       }
     }
     Object.keys(body).forEach((key, idx, array) => {
       if (idx === array.length - 1) {
-        query += `${key} = $${idx + 1} where id = $${
-          idx + 2
-        } returning codes, discount, menu_id, valid_date, image, updated_at`;
+        query += `${key} = $${idx + 1} where id = $${idx + 2} returning *`;
         value.push(body[key], params.id);
         return;
       }
@@ -153,7 +162,7 @@ const edit = (body, params, file) => {
       .query(query, value)
       .then((response) => {
         if (response.rows.length === 0)
-          return reject({ status: 404, message: "Data not found", err });
+          return reject({ status: 404, message: "Data not found" });
         return resolve({
           status: 200,
           data: response.rows[0],
@@ -161,6 +170,7 @@ const edit = (body, params, file) => {
         });
       })
       .catch((err) => {
+        console.log(err);
         return reject({ status: 500, message: "Internal server error", err });
       });
   });
