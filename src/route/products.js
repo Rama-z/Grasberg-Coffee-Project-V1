@@ -45,7 +45,7 @@ productsRouter.post(
 // agar dinamis menggunakan :id
 
 productsRouter.patch(
-  "/image/:id",
+  "/:id",
   isLogin(),
   allowedRole("admin"),
   memoryStorageUploadProfile,
