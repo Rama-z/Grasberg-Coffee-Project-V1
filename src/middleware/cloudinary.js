@@ -9,7 +9,8 @@ const uploader = async (req, res, next) => {
   const buffer = file.buffer;
   const ext = path.extname(file.originalname).toString();
   const datauri = parser.format(ext, buffer);
-  const filename = `${body.menu.replace(" ", "_")}_${body.varian_id}`;
+  let random = (Math.random() + 1).toString(36).substring(7);
+  const filename = `${random.replace(" ", "_")}_${random}`;
   const cloudinaryOpt = {
     public_id: filename,
     folder: "Grasberg",
