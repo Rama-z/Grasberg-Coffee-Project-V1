@@ -164,17 +164,25 @@ module.exports = {
           query += `image = '${imageUrl}', `;
         }
       }
-      Object.keys(body).forEach((keys, idx, array) => {
-        if (idx === array.length - 1) {
-          query += `${keys} = $${idx + 1} where id = $${
-            idx + 2
-          } returning menu, price, varian_id, image`;
-          value.push(body[keys], params.id);
-          return;
-        }
-        query += `${keys} = $${idx + 1}, `;
-        value.push(body[keys]);
-      });
+      Object.keys(body)
+        .filter(
+          (keys) =>
+            keys !== "category_name" &&
+            keys !== "promo_codes" &&
+            keys !== "id" &&
+            keys !== "discount"
+        )
+        .forEach((keys, idx, array) => {
+          if (idx === array.length - 1) {
+            query += `${keys} = $${idx + 1} where id = $${
+              idx + 2
+            } returning menu, price, varian_id, image`;
+            value.push(body[keys], params.id);
+            return;
+          }
+          query += `${keys} = $${idx + 1}, `;
+          value.push(body[keys]);
+        });
       database
         .query(query, value)
         .then((response) => {
