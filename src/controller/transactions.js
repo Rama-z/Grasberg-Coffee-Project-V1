@@ -148,9 +148,12 @@ module.exports = {
   },
   drop: async (req, res) => {
     try {
+      console.log("delete");
       const response = await repoTransaction.drop(req.params.id);
       return sendResponse.success(res, response.status, response);
     } catch (err) {
+      console.log(err);
+      console.log("err");
       return sendResponse.error(res, err.status || 500, err);
     }
   },

@@ -330,8 +330,10 @@ const drop = (queryParams) => {
   return new Promise((resolve, reject) => {
     const query = "delete from transactions where id = $1 returning *";
     const value = [queryParams];
+    console.log(query);
     database.query(query, value, (err, result) => {
       if (err) {
+        console.log(err);
         return reject({
           status: 500,
           message: "Internal server error",

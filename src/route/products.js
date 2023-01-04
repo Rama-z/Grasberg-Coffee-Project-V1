@@ -45,6 +45,13 @@ productsRouter.post(
 // agar dinamis menggunakan :id
 
 productsRouter.patch(
+  "delete/:id",
+  isLogin(),
+  allowedRole("admin"),
+  editProduct
+);
+
+productsRouter.patch(
   "/:id",
   isLogin(),
   allowedRole("admin"),
@@ -52,8 +59,6 @@ productsRouter.patch(
   cloud.uploader,
   editProduct
 );
-
-productsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
 
 // Export routernya
 module.exports = productsRouter;

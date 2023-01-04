@@ -54,7 +54,12 @@ transactionsRouter.patch(
   edit
 );
 
-transactionsRouter.delete("/:id", isLogin(), allowedRole("admin"), drop);
+transactionsRouter.patch(
+  "/delete/:id",
+  isLogin(),
+  allowedRole("user", "admin"),
+  edit
+);
 
 // Export routernya
 module.exports = transactionsRouter;
