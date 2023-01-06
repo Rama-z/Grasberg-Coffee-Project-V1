@@ -6,7 +6,6 @@ const memoryStorage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname);
-  console.log(ext);
   if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") {
     return cb({
       message: "Check your file type. Only .jpg, .jpeg, and .png are allowed",
@@ -30,18 +29,15 @@ exports.memoryStorageUploadProfile = async (req, res, next) => {
     // error multer
     if (error) {
       if (error.code == "LIMIT_FILE_SIZE") {
-        return response(res, {
-          data: null,
+        return res.status(400).json({
           status: 400,
-          message: "File Size is too large. Allowed file size is 2Mb",
+          msg: "File too large, image must be 2MB or lower",
         });
       } else {
         console.log(error);
-        return response(res, {
-          data: null,
+        return res.status(400).json({
           status: 400,
-          message: "General error.",
-          error,
+          msg: "Check your file type. Only .jpg, .jpeg, and .png are allowed",
         });
       }
     }

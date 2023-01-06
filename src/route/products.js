@@ -45,7 +45,7 @@ productsRouter.post(
 // agar dinamis menggunakan :id
 
 productsRouter.patch(
-  "delete/:id",
+  "/delete/:id",
   isLogin(),
   allowedRole("admin"),
   editProduct

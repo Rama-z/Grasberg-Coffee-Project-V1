@@ -183,6 +183,7 @@ module.exports = {
           query += `${keys} = $${idx + 1}, `;
           value.push(body[keys]);
         });
+      console.log(query);
       database
         .query(query, value)
         .then((response) => {
@@ -192,7 +193,25 @@ module.exports = {
               message: "Product not found, can't update product",
             });
           }
-          resolve({
+          if (!file) {
+            return resolve({
+              status: 200,
+              message: "Edit data success",
+              data: {
+                menu: response.rows[0].menu,
+                price: response.rows[0].price,
+                varian:
+                  response.rows[0].varian_id === 1
+                    ? "Coffee"
+                    : response.rows[0].varian_id === 2
+                    ? "Non Coffee"
+                    : response.rows[0].varian_id === 3
+                    ? "Foods"
+                    : "",
+              },
+            });
+          }
+          return resolve({
             status: 200,
             message: "Edit data success",
             data: {
